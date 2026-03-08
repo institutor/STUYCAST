@@ -2,34 +2,627 @@
 
 import {
   useScroll,
+  useMotionValueEvent,
   motion,
   useTransform,
-  useMotionValueEvent,
 } from "framer-motion";
 import { useRef, useEffect, useCallback } from "react";
 
+// ── Palette ────────────────────────────────────────────────────────
+const BG = "#000000";
+const P = {
+  bodyDk:    "#0f172a",
+  body:      "#1e293b",
+  bodyLt:    "#334155",
+  bodyHi:    "#475569",
+  lensDk:    "#1e3a5f",
+  lensRing:  "#3b82f6",
+  lensGlass: "#60a5fa",
+  lensCore:  "#93c5fd",
+  lensFlare: "#dbeafe",
+  red:       "#ef4444",
+  white:     "#e2e8f0",
+  whiteDim:  "#94a3b8",
+  blue:      "#3b82f6",
+  blueDim:   "#1e3a5f",
+  grip:      "#252540",
+  gripLt:    "#3d3d5c",
+};
+
+// ── Seeded PRNG ────────────────────────────────────────────────────
+function mulberry32(seed: number) {
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+// ── Programmatic pixel camera builder ──────────────────────────────
+// Instead of a text sprite, define the camera with shape primitives
+// snapped to a pixel grid. This avoids row-length bugs entirely.
+
+interface Pixel {
+  gx: number; // grid col
+  gy: number; // grid row
+  color: string;
+  scatterX: number;
+  scatterY: number;
+  delay: number;
+}
+
+function fillRect(
+  pixels: Pixel[],
+  gx: number, gy: number,
+  w: number, h: number,
+  color: string,
+  rand: () => number
+) {
+  for (let dy = 0; dy < h; dy++) {
+    for (let dx = 0; dx < w; dx++) {
+      pixels.push({
+        gx: gx + dx,
+        gy: gy + dy,
+        color,
+        scatterX: (rand() - 0.5) * 120,
+        scatterY: (rand() - 0.5) * 90,
+        delay: rand() * 0.55,
+      });
+    }
+  }
+}
+
+function fillCircle(
+  pixels: Pixel[],
+  cx: number, cy: number,
+  r: number,
+  color: string,
+  rand: () => number
+) {
+  const r2 = r * r;
+  for (let dy = -Math.ceil(r); dy <= Math.ceil(r); dy++) {
+    for (let dx = -Math.ceil(r); dx <= Math.ceil(r); dx++) {
+      if (dx * dx + dy * dy <= r2) {
+        pixels.push({
+          gx: Math.round(cx + dx),
+          gy: Math.round(cy + dy),
+          color,
+          scatterX: (rand() - 0.5) * 120,
+          scatterY: (rand() - 0.5) * 90,
+          delay: rand() * 0.55,
+        });
+      }
+    }
+  }
+}
+
+function fillRing(
+  pixels: Pixel[],
+  cx: number, cy: number,
+  rOuter: number, rInner: number,
+  color: string,
+  rand: () => number
+) {
+  const ro2 = rOuter * rOuter;
+  const ri2 = rInner * rInner;
+  for (let dy = -Math.ceil(rOuter); dy <= Math.ceil(rOuter); dy++) {
+    for (let dx = -Math.ceil(rOuter); dx <= Math.ceil(rOuter); dx++) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= ro2 && d2 > ri2) {
+        pixels.push({
+          gx: Math.round(cx + dx),
+          gy: Math.round(cy + dy),
+          color,
+          scatterX: (rand() - 0.5) * 120,
+          scatterY: (rand() - 0.5) * 90,
+          delay: rand() * 0.55,
+        });
+      }
+    }
+  }
+}
+
+// Grid dimensions for the camera — wider and taller for better proportions
+const GRID_W = 52;
+const GRID_H = 36;
+
+let _pixelCache: Pixel[] | null = null;
+function buildCamera(): Pixel[] {
+  if (_pixelCache) return _pixelCache;
+  const rand = mulberry32(77);
+  const pixels: Pixel[] = [];
+
+  // ── Microphone / antenna on top ──
+  fillRect(pixels, 18, 0, 1, 3, P.bodyHi, rand);
+  fillRect(pixels, 17, 0, 3, 1, P.bodyHi, rand);
+
+  // ── Viewfinder housing ──
+  fillRect(pixels, 14, 3, 8, 1, P.bodyLt, rand);  // top edge
+  fillRect(pixels, 14, 4, 1, 4, P.bodyLt, rand);  // left wall
+  fillRect(pixels, 21, 4, 1, 4, P.bodyLt, rand);  // right wall
+  fillRect(pixels, 14, 8, 8, 1, P.bodyLt, rand);  // bottom edge
+  fillRect(pixels, 15, 4, 6, 4, P.bodyDk, rand);  // screen
+  // Screen highlight
+  fillRect(pixels, 16, 5, 2, 1, P.blueDim, rand);
+
+  // ── Viewfinder neck ──
+  fillRect(pixels, 17, 9, 3, 1, P.body, rand);
+
+  // ── Main body — outer shell ──
+  fillRect(pixels, 8, 10, 32, 1, P.bodyDk, rand);  // top outline
+  fillRect(pixels, 7, 11, 1, 18, P.bodyDk, rand);  // left outline
+  fillRect(pixels, 40, 11, 1, 18, P.bodyDk, rand);  // right outline
+  fillRect(pixels, 8, 29, 32, 1, P.bodyDk, rand);  // bottom outline
+
+  // ── Main body — fill ──
+  fillRect(pixels, 8, 11, 32, 18, P.body, rand);
+
+  // ── Inner panel (lighter area) ──
+  fillRect(pixels, 10, 12, 28, 16, P.bodyLt, rand);
+
+  // ── Panel details / ridges ──
+  fillRect(pixels, 11, 13, 26, 1, P.bodyHi, rand);  // top accent line
+  fillRect(pixels, 11, 26, 26, 1, P.bodyDk, rand);  // bottom shadow line
+
+  // ── Recording light (top-left of body) ──
+  fillRect(pixels, 11, 12, 2, 1, P.red, rand);
+
+  // ── White detail dot (top-right of body) ──
+  fillRect(pixels, 35, 12, 1, 1, P.white, rand);
+
+  // ── Tape compartment lines ──
+  fillRect(pixels, 24, 15, 12, 1, P.bodyDk, rand);
+  fillRect(pixels, 24, 15, 1, 8, P.bodyDk, rand);
+  fillRect(pixels, 35, 15, 1, 8, P.bodyDk, rand);
+  fillRect(pixels, 24, 22, 12, 1, P.bodyDk, rand);
+  // Tape reels (two small circles)
+  fillCircle(pixels, 28, 18, 1.5, P.bodyHi, rand);
+  fillCircle(pixels, 32, 18, 1.5, P.bodyHi, rand);
+
+  // ── Buttons row ──
+  fillRect(pixels, 13, 24, 2, 2, P.bodyDk, rand);
+  fillRect(pixels, 16, 24, 2, 2, P.bodyHi, rand);
+  fillRect(pixels, 19, 24, 2, 2, P.bodyDk, rand);
+
+  // ── Lens barrel ──
+  // Outer barrel
+  fillCircle(pixels, 3, 20, 6, P.lensDk, rand);
+  // Blue ring
+  fillRing(pixels, 3, 20, 5.2, 3.8, P.lensRing, rand);
+  // Lens glass
+  fillCircle(pixels, 3, 20, 3.5, P.lensGlass, rand);
+  // Inner ring
+  fillRing(pixels, 3, 20, 2.5, 1.5, P.lensDk, rand);
+  // Core highlight
+  fillCircle(pixels, 3, 20, 1.2, P.lensCore, rand);
+  // Flare spot
+  fillRect(pixels, 2, 18, 1, 1, P.lensFlare, rand);
+
+  // ── Grip / handle (right side) ──
+  fillRect(pixels, 41, 13, 3, 16, P.grip, rand);
+  // Grip ridges
+  for (let i = 0; i < 7; i++) {
+    fillRect(pixels, 41, 14 + i * 2, 3, 1, P.gripLt, rand);
+  }
+  // Grip top/bottom caps
+  fillRect(pixels, 41, 12, 3, 1, P.bodyDk, rand);
+  fillRect(pixels, 41, 29, 3, 1, P.bodyDk, rand);
+
+  // ── Shoulder pad / bottom detail ──
+  fillRect(pixels, 12, 30, 24, 2, P.bodyDk, rand);
+  fillRect(pixels, 14, 32, 20, 1, P.bodyDk, rand);
+
+  // De-duplicate: keep only the last pixel at each grid position
+  const seen = new Map<string, number>();
+  for (let i = 0; i < pixels.length; i++) {
+    seen.set(`${pixels[i].gx},${pixels[i].gy}`, i);
+  }
+  _pixelCache = Array.from(seen.values()).map(i => pixels[i]);
+  return _pixelCache;
+}
+
+// ── Floating particle data ─────────────────────────────────────────
+interface Particle {
+  x: number; y: number; // position as fraction of canvas
+  size: number;
+  speed: number;
+  alpha: number;
+}
+
+let _particles: Particle[] | null = null;
+function getParticles(): Particle[] {
+  if (_particles) return _particles;
+  const rand = mulberry32(123);
+  _particles = [];
+  for (let i = 0; i < 60; i++) {
+    _particles.push({
+      x: rand(),
+      y: rand(),
+      size: 1 + rand() * 3,
+      speed: 0.2 + rand() * 0.8,
+      alpha: 0.05 + rand() * 0.15,
+    });
+  }
+  return _particles;
+}
+
+// ── Scene draw helpers ─────────────────────────────────────────────
+function drawDotGrid(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  alpha: number
+) {
+  const spacing = 28;
+  ctx.fillStyle = `rgba(59,130,246,${alpha})`;
+  for (let y = spacing; y < ch; y += spacing) {
+    for (let x = spacing; x < cw; x += spacing) {
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+}
+
+function drawFilmStrip(
+  ctx: CanvasRenderingContext2D,
+  x: number, ch: number,
+  width: number, alpha: number, progress: number
+) {
+  ctx.globalAlpha = alpha;
+  // Film strip background
+  ctx.fillStyle = P.bodyDk;
+  ctx.fillRect(x, 0, width, ch);
+  // Sprocket holes
+  const holeSize = width * 0.35;
+  const spacing = holeSize * 2.5;
+  const yOffset = (progress * ch * 2) % spacing;
+  ctx.fillStyle = BG;
+  for (let y = -spacing + yOffset; y < ch + spacing; y += spacing) {
+    const hx = x + (width - holeSize) / 2;
+    ctx.fillRect(hx, y, holeSize, holeSize);
+  }
+  // Edge perforations
+  ctx.fillStyle = P.body;
+  ctx.fillRect(x, 0, 1, ch);
+  ctx.fillRect(x + width - 1, 0, 1, ch);
+  ctx.globalAlpha = 1;
+}
+
+function drawFloatingParticles(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  progress: number, alpha: number
+) {
+  const particles = getParticles();
+  for (const p of particles) {
+    const px = ((p.x + progress * p.speed * 0.5) % 1.2 - 0.1) * cw;
+    const py = ((p.y + progress * p.speed * 0.3) % 1.2 - 0.1) * ch;
+    ctx.globalAlpha = p.alpha * alpha;
+    ctx.fillStyle = P.lensRing;
+    ctx.fillRect(px, py, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawScanlines(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  alpha: number
+) {
+  ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+  for (let y = 0; y < ch; y += 3) {
+    ctx.fillRect(0, y, cw, 1);
+  }
+}
+
+function drawVignette(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  strength: number
+) {
+  const grad = ctx.createRadialGradient(
+    cw / 2, ch / 2, Math.min(cw, ch) * 0.2,
+    cw / 2, ch / 2, Math.max(cw, ch) * 0.75
+  );
+  grad.addColorStop(0, "transparent");
+  grad.addColorStop(1, `rgba(0,0,0,${strength})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, cw, ch);
+}
+
+function drawEdgeFade(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number
+) {
+  const fadeSize = Math.max(cw, ch) * 0.15;
+  const topG = ctx.createLinearGradient(0, 0, 0, fadeSize);
+  topG.addColorStop(0, BG); topG.addColorStop(1, "transparent");
+  ctx.fillStyle = topG; ctx.fillRect(0, 0, cw, fadeSize);
+  const botG = ctx.createLinearGradient(0, ch - fadeSize, 0, ch);
+  botG.addColorStop(0, "transparent"); botG.addColorStop(1, BG);
+  ctx.fillStyle = botG; ctx.fillRect(0, ch - fadeSize, cw, fadeSize);
+  const leftF = fadeSize * 1.8;
+  const leftG = ctx.createLinearGradient(0, 0, leftF, 0);
+  leftG.addColorStop(0, BG); leftG.addColorStop(1, "transparent");
+  ctx.fillStyle = leftG; ctx.fillRect(0, 0, leftF, ch);
+  const rightG = ctx.createLinearGradient(cw - fadeSize, 0, cw, 0);
+  rightG.addColorStop(0, "transparent"); rightG.addColorStop(1, BG);
+  ctx.fillStyle = rightG; ctx.fillRect(cw - fadeSize, 0, fadeSize, ch);
+}
+
+function drawNoise(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  density: number, seed: number
+) {
+  const rand = mulberry32(seed);
+  const step = 4;
+  for (let y = 0; y < ch; y += step) {
+    for (let x = 0; x < cw; x += step) {
+      if (rand() < density) {
+        ctx.fillStyle = `rgba(226,232,240,${rand() * 0.25})`;
+        ctx.fillRect(x, y, step, step);
+      }
+    }
+  }
+}
+
+// ── Main draw ──────────────────────────────────────────────────────
+// Phases:
+// 0.00–0.12  Noise + scattered pixels
+// 0.12–0.50  Assembly — pixels fly into place
+// 0.50–0.70  Camera formed, scene elements appear
+// 0.70–1.00  Full scene — REC, film strips, glow
+
+function drawScene(
+  ctx: CanvasRenderingContext2D,
+  cw: number, ch: number,
+  progress: number
+) {
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, cw, ch);
+
+  const camera = buildCamera();
+
+  // Scale pixel grid to fill ~55% height, maintain aspect
+  const pxSize = Math.max(2, Math.floor((ch * 0.50) / GRID_H));
+  const totalW = GRID_W * pxSize;
+  const totalH = GRID_H * pxSize;
+  const ox = (cw - totalW) / 2;
+  const oy = (ch - totalH) / 2 - pxSize * 2; // slightly above center for text below
+
+  // Lens center in canvas coords (for glow)
+  const lensCX = ox + 3 * pxSize;
+  const lensCY = oy + 20 * pxSize;
+
+  // ─── Phase 1: Scatter ──────────────────────────────────────
+  if (progress < 0.12) {
+    const t = progress / 0.12;
+    drawNoise(ctx, cw, ch, 0.35 * (1 - t * 0.4), Math.floor(progress * 500));
+    drawDotGrid(ctx, cw, ch, 0.03 * t);
+
+    for (const px of camera) {
+      const sx = ox + px.gx * pxSize + px.scatterX * pxSize * 0.9;
+      const sy = oy + px.gy * pxSize + px.scatterY * pxSize * 0.9;
+      ctx.globalAlpha = 0.1 + t * 0.2;
+      ctx.fillStyle = px.color;
+      ctx.fillRect(sx, sy, pxSize, pxSize);
+    }
+    ctx.globalAlpha = 1;
+    drawFloatingParticles(ctx, cw, ch, progress, 0.4 * t);
+  }
+
+  // ─── Phase 2: Assembly ─────────────────────────────────────
+  else if (progress < 0.50) {
+    const t = (progress - 0.12) / 0.38;
+
+    drawDotGrid(ctx, cw, ch, 0.04);
+    drawNoise(ctx, cw, ch, 0.06 * (1 - t), Math.floor(progress * 400));
+    drawFloatingParticles(ctx, cw, ch, progress, 0.3 + t * 0.4);
+
+    for (const px of camera) {
+      const arrStart = px.delay * 0.5;
+      const arrEnd = arrStart + 0.45;
+      const pt = Math.max(0, Math.min(1, (t - arrStart) / (arrEnd - arrStart)));
+      const ease = easeOutCubic(pt);
+
+      const fx = ox + px.gx * pxSize;
+      const fy = oy + px.gy * pxSize;
+      const sx = fx + px.scatterX * pxSize * (1 - ease);
+      const sy = fy + px.scatterY * pxSize * (1 - ease);
+
+      ctx.globalAlpha = 0.3 + ease * 0.7;
+      ctx.fillStyle = px.color;
+      ctx.fillRect(Math.round(sx), Math.round(sy), pxSize, pxSize);
+    }
+    ctx.globalAlpha = 1;
+
+    // Lens glow building
+    if (t > 0.6) {
+      const ga = (t - 0.6) / 0.4 * 0.3;
+      const grad = ctx.createRadialGradient(lensCX, lensCY, 0, lensCX, lensCY, pxSize * 8);
+      grad.addColorStop(0, `rgba(59,130,246,${ga})`);
+      grad.addColorStop(0.4, `rgba(59,130,246,${ga * 0.3})`);
+      grad.addColorStop(1, "transparent");
+      ctx.fillStyle = grad;
+      ctx.fillRect(lensCX - pxSize * 8, lensCY - pxSize * 8, pxSize * 16, pxSize * 16);
+    }
+  }
+
+  // ─── Phase 3: Formed + details ─────────────────────────────
+  else if (progress < 0.70) {
+    const t = (progress - 0.50) / 0.20;
+
+    drawDotGrid(ctx, cw, ch, 0.04);
+    drawFloatingParticles(ctx, cw, ch, progress, 0.6);
+
+    // Film strips fade in
+    const stripAlpha = t * 0.12;
+    const stripW = pxSize * 3;
+    drawFilmStrip(ctx, ox - stripW - pxSize * 3, ch, stripW, stripAlpha, progress);
+    drawFilmStrip(ctx, ox + totalW + pxSize * 3, ch, stripW, stripAlpha, progress);
+
+    // Camera
+    for (const px of camera) {
+      ctx.fillStyle = px.color;
+      ctx.fillRect(ox + px.gx * pxSize, oy + px.gy * pxSize, pxSize, pxSize);
+    }
+
+    // Lens glow
+    const grad = ctx.createRadialGradient(lensCX, lensCY, 0, lensCX, lensCY, pxSize * 10);
+    grad.addColorStop(0, "rgba(59,130,246,0.35)");
+    grad.addColorStop(0.3, "rgba(59,130,246,0.12)");
+    grad.addColorStop(1, "transparent");
+    ctx.fillStyle = grad;
+    ctx.fillRect(lensCX - pxSize * 10, lensCY - pxSize * 10, pxSize * 20, pxSize * 20);
+
+    // Title
+    if (t > 0.2) {
+      const ta = Math.min((t - 0.2) / 0.4, 1);
+      ctx.globalAlpha = ta;
+      const fs = Math.max(12, pxSize * 2.8);
+      ctx.font = `800 ${fs}px Outfit, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.letterSpacing = `${Math.max(2, pxSize * 0.5)}px`;
+      ctx.fillStyle = P.white;
+      ctx.fillText("STUYCAST", cw / 2, oy + totalH + pxSize * 2.5);
+      ctx.letterSpacing = "0px";
+      ctx.globalAlpha = 1;
+    }
+    if (t > 0.5) {
+      const sa = Math.min((t - 0.5) / 0.3, 1);
+      ctx.globalAlpha = sa;
+      const ss = Math.max(9, pxSize * 1.3);
+      ctx.font = `400 ${ss}px Outfit, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.letterSpacing = `${Math.max(2, pxSize * 0.7)}px`;
+      ctx.fillStyle = P.blue;
+      ctx.fillText("MEDIA PRODUCTION", cw / 2, oy + totalH + pxSize * 6);
+      ctx.letterSpacing = "0px";
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ─── Phase 4: Full scene + REC ─────────────────────────────
+  else {
+    const t = (progress - 0.70) / 0.30;
+
+    drawDotGrid(ctx, cw, ch, 0.05);
+    drawFloatingParticles(ctx, cw, ch, progress, 0.7);
+
+    // Film strips
+    const stripW = pxSize * 3;
+    drawFilmStrip(ctx, ox - stripW - pxSize * 3, ch, stripW, 0.12, progress);
+    drawFilmStrip(ctx, ox + totalW + pxSize * 3, ch, stripW, 0.12, progress);
+
+    // Camera
+    for (const px of camera) {
+      ctx.fillStyle = px.color;
+      ctx.fillRect(ox + px.gx * pxSize, oy + px.gy * pxSize, pxSize, pxSize);
+    }
+
+    // Lens glow
+    const grad = ctx.createRadialGradient(lensCX, lensCY, 0, lensCX, lensCY, pxSize * 10);
+    grad.addColorStop(0, "rgba(59,130,246,0.4)");
+    grad.addColorStop(0.3, "rgba(59,130,246,0.15)");
+    grad.addColorStop(1, "transparent");
+    ctx.fillStyle = grad;
+    ctx.fillRect(lensCX - pxSize * 10, lensCY - pxSize * 10, pxSize * 20, pxSize * 20);
+
+    // REC indicator — blink
+    const blink = Math.sin(progress * 50) > 0;
+    if (blink) {
+      const rx = ox + totalW - pxSize * 2;
+      const ry = oy - pxSize * 2;
+      // Red dot
+      ctx.fillStyle = P.red;
+      ctx.beginPath();
+      ctx.arc(rx, ry, pxSize * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Glow
+      const rg = ctx.createRadialGradient(rx, ry, 0, rx, ry, pxSize * 3);
+      rg.addColorStop(0, "rgba(239,68,68,0.25)");
+      rg.addColorStop(1, "transparent");
+      ctx.fillStyle = rg;
+      ctx.fillRect(rx - pxSize * 3, ry - pxSize * 3, pxSize * 6, pxSize * 6);
+      // Text
+      ctx.font = `700 ${Math.max(10, pxSize * 1.1)}px Outfit, system-ui, sans-serif`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.letterSpacing = "2px";
+      ctx.fillStyle = P.red;
+      ctx.fillText("REC", rx + pxSize * 1.4, ry);
+      ctx.letterSpacing = "0px";
+    }
+
+    // Title
+    const fs = Math.max(12, pxSize * 2.8);
+    ctx.font = `800 ${fs}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.letterSpacing = `${Math.max(2, pxSize * 0.5)}px`;
+    ctx.fillStyle = P.white;
+    ctx.fillText("STUYCAST", cw / 2, oy + totalH + pxSize * 2.5);
+    ctx.letterSpacing = "0px";
+
+    // Subtitle
+    const ss = Math.max(9, pxSize * 1.3);
+    ctx.font = `400 ${ss}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.letterSpacing = `${Math.max(2, pxSize * 0.7)}px`;
+    ctx.fillStyle = P.blue;
+    ctx.fillText("MEDIA PRODUCTION", cw / 2, oy + totalH + pxSize * 6);
+    ctx.letterSpacing = "0px";
+
+    // Corner brackets
+    const m = Math.max(8, pxSize * 1.5);
+    const bl = Math.max(12, pxSize * 2.5);
+    ctx.strokeStyle = `rgba(59,130,246,${0.15 + t * 0.1})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(m, m + bl); ctx.lineTo(m, m); ctx.lineTo(m + bl, m); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cw-m-bl, m); ctx.lineTo(cw-m, m); ctx.lineTo(cw-m, m+bl); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(m, ch-m-bl); ctx.lineTo(m, ch-m); ctx.lineTo(m+bl, ch-m); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cw-m-bl, ch-m); ctx.lineTo(cw-m, ch-m); ctx.lineTo(cw-m, ch-m-bl); ctx.stroke();
+
+    // Timestamp
+    ctx.globalAlpha = 0.35 + t * 0.15;
+    ctx.font = `400 ${Math.max(8, pxSize * 0.8)}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.letterSpacing = "1px";
+    ctx.fillStyle = P.whiteDim;
+    ctx.fillText("EST. 2019  ·  STUYVESANT HIGH SCHOOL", cw - m - 4, ch - m - 4);
+    ctx.letterSpacing = "0px";
+    ctx.globalAlpha = 1;
+  }
+
+  // Global overlays
+  drawScanlines(ctx, cw, ch, 0.05);
+  drawVignette(ctx, cw, ch, 0.5);
+  drawEdgeFade(ctx, cw, ch);
+}
+
+// ── Component ──────────────────────────────────────────────────────
 export function ScrollDrivenSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasWrapRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
-  const rafRef = useRef<number>(0);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  // Floating keyword transforms — full-width drift
-  const word1X = useTransform(scrollYProgress, [0.05, 0.95], ["-10%", "70%"]);
-  const word1Opacity = useTransform(scrollYProgress, [0.05, 0.15, 0.45, 0.55, 0.85, 0.95], [0, 0.04, 0.10, 0.10, 0.04, 0]);
-  const word2X = useTransform(scrollYProgress, [0.08, 0.92], ["110%", "20%"]);
-  const word2Opacity = useTransform(scrollYProgress, [0.08, 0.18, 0.42, 0.58, 0.82, 0.92], [0, 0.03, 0.08, 0.08, 0.03, 0]);
-  const word3X = useTransform(scrollYProgress, [0.12, 0.88], ["5%", "60%"]);
-  const word3Opacity = useTransform(scrollYProgress, [0.12, 0.22, 0.40, 0.60, 0.78, 0.88], [0, 0.05, 0.12, 0.12, 0.05, 0]);
-  const word4X = useTransform(scrollYProgress, [0.15, 0.85], ["90%", "15%"]);
-  const word4Opacity = useTransform(scrollYProgress, [0.15, 0.25, 0.38, 0.62, 0.75, 0.85], [0, 0.03, 0.07, 0.07, 0.03, 0]);
-  const word5X = useTransform(scrollYProgress, [0.18, 0.82], ["-5%", "50%"]);
-  const word5Opacity = useTransform(scrollYProgress, [0.18, 0.28, 0.42, 0.58, 0.72, 0.82], [0, 0.04, 0.09, 0.09, 0.04, 0]);
+  // Continuous marquee text — scrolls slowly from right to left near the bottom
+  const marqueeX = useTransform(scrollYProgress, [0.05, 0.95], ["30%", "-80%"]);
+  const marqueeOpacity = useTransform(scrollYProgress, [0.05, 0.12, 0.85, 0.95], [0, 0.08, 0.08, 0]);
 
   // Text reveal transforms
   const labelOpacity = useTransform(scrollYProgress, [0.03, 0.08], [0, 1]);
@@ -44,516 +637,97 @@ export function ScrollDrivenSection() {
   const subOpacity = useTransform(scrollYProgress, [0.50, 0.58], [0, 1]);
   const subY = useTransform(scrollYProgress, [0.50, 0.58], [20, 0]);
 
-  // Scroll progress indicator
   const progressHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
   const progressVisible = useTransform(scrollYProgress, (v) =>
     v > 0.01 && v < 0.99 ? 1 : 0
   );
-
-  // Canvas scene opacity/scale — fade in from black
-  const sceneOpacity = useTransform(
+  const canvasOpacity = useTransform(
     scrollYProgress,
-    [0, 0.05, 0.15, 0.88, 0.96],
+    [0, 0.06, 0.14, 0.88, 0.96],
     [0, 0, 1, 1, 0]
   );
-  const sceneScale = useTransform(
-    scrollYProgress,
-    [0, 0.05, 0.20],
-    [0.85, 0.85, 1]
-  );
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    progressRef.current = v;
-  });
+  const draw = useCallback((progress: number) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    drawScene(ctx, canvas.width / dpr, canvas.height / dpr, progress);
+  }, []);
 
-  /* ── pixel-art draw routine ── */
-  const drawScene = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number, progress: number) => {
-      const t = Date.now() / 1000;
-      ctx.clearRect(0, 0, w, h);
-
-      const px = Math.max(5, Math.floor(Math.min(w, h) / 65));
-      const cols = Math.floor(w / px);
-      const rows = Math.floor(h / px);
-
-      /* ── helpers ── */
-      const fill = (x: number, y: number, color: string) => {
-        if (x >= 0 && y >= 0 && x < cols && y < rows) {
-          ctx.fillStyle = color;
-          ctx.fillRect(x * px, y * px, px - 1, px - 1);
-        }
-      };
-
-      const fillRect = (
-        sx: number, sy: number, rw: number, rh: number, color: string
-      ) => {
-        ctx.fillStyle = color;
-        for (let dy = 0; dy < rh; dy++)
-          for (let dx = 0; dx < rw; dx++) {
-            const cx = sx + dx, cy = sy + dy;
-            if (cx >= 0 && cy >= 0 && cx < cols && cy < rows)
-              ctx.fillRect(cx * px, cy * px, px - 1, px - 1);
-          }
-      };
-
-      const fillCircle = (
-        cx: number, cy: number, r: number, color: string
-      ) => {
-        ctx.fillStyle = color;
-        for (let dy = -r; dy <= r; dy++)
-          for (let dx = -r; dx <= r; dx++)
-            if (dx * dx + dy * dy <= r * r) {
-              const px2 = cx + dx, py2 = cy + dy;
-              if (px2 >= 0 && py2 >= 0 && px2 < cols && py2 < rows)
-                ctx.fillRect(px2 * px, py2 * px, px - 1, px - 1);
-            }
-      };
-
-      const fillRing = (
-        cx: number, cy: number, outerR: number, innerR: number, color: string
-      ) => {
-        ctx.fillStyle = color;
-        for (let dy = -outerR; dy <= outerR; dy++)
-          for (let dx = -outerR; dx <= outerR; dx++) {
-            const d = dx * dx + dy * dy;
-            if (d <= outerR * outerR && d >= innerR * innerR) {
-              const px2 = cx + dx, py2 = cy + dy;
-              if (px2 >= 0 && py2 >= 0 && px2 < cols && py2 < rows)
-                ctx.fillRect(px2 * px, py2 * px, px - 1, px - 1);
-            }
-          }
-      };
-
-      /* ── helper: ease a sub-range of progress ── */
-      const ease = (lo: number, hi: number) =>
-        Math.max(0, Math.min(1, (progress - lo) / (hi - lo)));
-
-      /* camera grid coordinates */
-      const camW = 32;
-      const camH = 20;
-      const camX = Math.floor(cols / 2 - camW / 2);
-      const camY = Math.floor(rows / 2 - camH / 2);
-      const lensX = camX + Math.floor(camW * 0.42);
-      const lensY = camY + Math.floor(camH / 2);
-      const lensR = Math.min(7, Math.floor(camH / 2.6));
-
-      /* ═══════════════════════════════════════
-         Phase 0 (0.05 → 0.25): dot grid fades in
-         ═══════════════════════════════════════ */
-      const gridAlpha = ease(0.05, 0.25);
-      if (gridAlpha > 0) {
-        for (let r = 0; r < rows; r += 4)
-          for (let c = 0; c < cols; c += 4) {
-            const flicker =
-              Math.sin(t * 0.5 + c * 0.3 + r * 0.2) * 0.5 + 0.5;
-            const a = (0.02 + flicker * 0.03) * gridAlpha;
-            fill(c, r, `rgba(59,130,246,${a})`);
-          }
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 1 (0.10 → 0.30): camera body draws in
-         ═══════════════════════════════════════ */
-      const bodyP = ease(0.10, 0.30);
-      if (bodyP > 0) {
-        /* outline draws clockwise — top → right → bottom → left */
-        const perim = 2 * (camW + camH);
-        const drawn = Math.floor(perim * bodyP);
-        const outlinePixels: [number, number][] = [];
-        // top edge
-        for (let i = 0; i < camW; i++) outlinePixels.push([camX + i, camY]);
-        // right edge
-        for (let i = 1; i < camH; i++) outlinePixels.push([camX + camW - 1, camY + i]);
-        // bottom edge
-        for (let i = camW - 2; i >= 0; i--) outlinePixels.push([camX + i, camY + camH - 1]);
-        // left edge
-        for (let i = camH - 2; i >= 1; i--) outlinePixels.push([camX, camY + i]);
-
-        for (let i = 0; i < Math.min(drawn, outlinePixels.length); i++) {
-          const [ox, oy] = outlinePixels[i];
-          fill(ox, oy, "#2a2a4e");
-        }
-
-        /* body fill fades in after outline is ~60% done */
-        const fillP = ease(0.20, 0.30);
-        if (fillP > 0) {
-          for (let dy = 1; dy < camH - 1; dy++)
-            for (let dx = 1; dx < camW - 1; dx++) {
-              const a = fillP * 0.9;
-              fill(camX + dx, camY + dy, `rgba(26,26,46,${a})`);
-            }
-          // highlights
-          fillRect(camX, camY, camW, 1, `rgba(42,42,78,${fillP})`);
-          fillRect(camX, camY, 1, camH, `rgba(42,42,78,${fillP * 0.7})`);
-          // shadows
-          fillRect(camX + camW - 1, camY, 1, camH, `rgba(13,13,26,${fillP})`);
-          fillRect(camX, camY + camH - 1, camW, 1, `rgba(13,13,26,${fillP})`);
-        }
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 2 (0.25 → 0.40): viewfinder + top details
-         ═══════════════════════════════════════ */
-      const detailsP = ease(0.25, 0.40);
-      if (detailsP > 0) {
-        const vfW = 8, vfH = 3;
-        const vfX = camX + Math.floor(camW / 2 - vfW / 2) - 2;
-        const vfY = camY - vfH;
-        // viewfinder bump
-        for (let dy = 0; dy < vfH; dy++)
-          for (let dx = 0; dx < vfW; dx++)
-            fill(vfX + dx, vfY + dy, `rgba(26,26,46,${detailsP})`);
-        fillRect(vfX, vfY, vfW, 1, `rgba(42,42,78,${detailsP})`);
-        // hot shoe
-        fillRect(vfX + 2, vfY - 1, 4, 1, `rgba(51,51,85,${detailsP})`);
-        // mode dial
-        fillRect(camX + camW - 6, camY - 1, 5, 2, `rgba(68,68,102,${detailsP})`);
-        fillRect(camX + camW - 5, camY - 1, 1, 1, `rgba(102,102,170,${detailsP})`);
-        // shutter button
-        fillRect(camX + Math.floor(camW / 2) + 4, camY - 1, 3, 1, `rgba(204,51,51,${detailsP})`);
-        fillRect(camX + Math.floor(camW / 2) + 5, camY - 2, 1, 1, `rgba(220,80,80,${detailsP})`);
-
-        // grip texture
-        for (let i = 0; i < 5; i++) {
-          fill(camX + 1, camY + 3 + i * 3, `rgba(34,34,68,${detailsP})`);
-          fill(camX + 2, camY + 3 + i * 3, `rgba(34,34,68,${detailsP})`);
-          fill(camX + 3, camY + 3 + i * 3, `rgba(34,34,68,${detailsP})`);
-          fill(camX + 1, camY + 4 + i * 3, `rgba(17,17,51,${detailsP})`);
-          fill(camX + 2, camY + 4 + i * 3, `rgba(17,17,51,${detailsP})`);
-          fill(camX + 3, camY + 4 + i * 3, `rgba(17,17,51,${detailsP})`);
-        }
-
-        // flash unit on top-left
-        fillRect(camX + 1, camY - 2, 3, 2, `rgba(60,60,90,${detailsP})`);
-        fill(camX + 2, camY - 2, `rgba(180,180,220,${detailsP * 0.6})`);
-
-        // brand text area (small rectangle on body)
-        fillRect(camX + camW - 10, camY + 2, 8, 2, `rgba(20,20,40,${detailsP * 0.5})`);
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 3 (0.30 → 0.50): lens draws in ring by ring
-         ═══════════════════════════════════════ */
-      const lensP = ease(0.30, 0.50);
-      if (lensP > 0) {
-        // outer barrel
-        if (lensP > 0.0) {
-          const a = Math.min(1, lensP / 0.25);
-          fillRing(lensX, lensY, lensR + 1, lensR, `rgba(40,40,70,${a})`);
-        }
-        // outer ring
-        if (lensP > 0.2) {
-          const a = Math.min(1, (lensP - 0.2) / 0.2);
-          fillRing(lensX, lensY, lensR, lensR - 1, `rgba(51,51,102,${a})`);
-        }
-        // inner ring
-        if (lensP > 0.4) {
-          const a = Math.min(1, (lensP - 0.4) / 0.2);
-          fillRing(lensX, lensY, lensR - 1, lensR - 2, `rgba(34,34,68,${a})`);
-        }
-        // glass
-        if (lensP > 0.6) {
-          const a = Math.min(1, (lensP - 0.6) / 0.2);
-          fillCircle(lensX, lensY, lensR - 2, `rgba(10,10,32,${a})`);
-        }
-        // lens reflection — animated highlight
-        if (lensP > 0.8) {
-          const refAngle = t * 0.8 + progress * Math.PI;
-          const refDx = Math.round(Math.cos(refAngle) * (lensR - 3));
-          const refDy = Math.round(Math.sin(refAngle) * (lensR - 3));
-          const a = 0.4 + Math.sin(t * 2) * 0.2;
-          fill(lensX + refDx, lensY + refDy, `rgba(100,160,255,${a * (lensP - 0.8) * 5})`);
-          // secondary reflection
-          fill(lensX - refDy, lensY + refDx, `rgba(80,140,255,${a * 0.3 * (lensP - 0.8) * 5})`);
-        }
-        // center glow — pulses
-        if (lensP > 0.9) {
-          const glowA = (0.2 + Math.sin(t * 1.5) * 0.15 + progress * 0.2) * Math.min(1, (lensP - 0.9) * 10);
-          fillCircle(lensX, lensY, 1, `rgba(59,130,246,${glowA})`);
-        }
-
-        // lens ring details — small notches
-        if (lensP > 0.5) {
-          const notchA = Math.min(1, (lensP - 0.5) * 2);
-          for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const nx = Math.round(lensX + Math.cos(angle) * (lensR + 1));
-            const ny = Math.round(lensY + Math.sin(angle) * (lensR + 1));
-            fill(nx, ny, `rgba(80,80,120,${notchA * 0.6})`);
-          }
-        }
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 4 (0.40 → 0.55): film strips slide in
-         ═══════════════════════════════════════ */
-      const stripP = ease(0.40, 0.55);
-      if (stripP > 0) {
-        const stripW = 3;
-        const visibleRows = Math.floor(rows * stripP);
-        for (let r = 0; r < visibleRows; r++) {
-          const isSprocket = r % 4 === 0;
-          // left strip
-          fillRect(0, r, stripW, 1, isSprocket ? `rgba(17,17,34,${stripP})` : `rgba(13,13,26,${stripP})`);
-          if (isSprocket) fill(1, r, `rgba(34,34,68,${stripP})`);
-          // right strip
-          fillRect(cols - stripW, r, stripW, 1, isSprocket ? `rgba(17,17,34,${stripP})` : `rgba(13,13,26,${stripP})`);
-          if (isSprocket) fill(cols - 2, r, `rgba(34,34,68,${stripP})`);
-        }
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 5 (0.45 → 0.60): secondary lens (smaller, right side)
-         ═══════════════════════════════════════ */
-      const lens2P = ease(0.45, 0.60);
-      if (lens2P > 0) {
-        const l2x = camX + camW - 7;
-        const l2y = camY + 5;
-        const l2r = 2;
-        fillRing(l2x, l2y, l2r + 1, l2r, `rgba(40,40,70,${lens2P})`);
-        fillRing(l2x, l2y, l2r, l2r - 1, `rgba(51,51,102,${lens2P})`);
-        fillCircle(l2x, l2y, l2r - 1, `rgba(15,15,35,${lens2P})`);
-
-        // AF assist lamp
-        const lampGlow = 0.5 + Math.sin(t * 2.5) * 0.3;
-        fill(camX + camW - 4, camY + 3, `rgba(255,100,50,${lens2P * lampGlow * 0.6})`);
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 6 (0.50 → 0.65): floating particles appear
-         ═══════════════════════════════════════ */
-      const particleP = ease(0.50, 0.65);
-      if (particleP > 0) {
-        for (let i = 0; i < 18; i++) {
-          const seed = i * 137.508;
-          const fx = (Math.sin(seed + t * (0.2 + i * 0.02)) * 0.5 + 0.5) * cols;
-          const fy = (Math.cos(seed * 0.7 + t * (0.15 + i * 0.01)) * 0.5 + 0.5) * rows;
-          const a = (0.06 + Math.sin(t + i) * 0.05) * particleP;
-          const size = i % 3 === 0 ? 2 : 1;
-          if (size === 2) {
-            fill(fx | 0, fy | 0, `rgba(59,130,246,${a})`);
-            fill((fx | 0) + 1, fy | 0, `rgba(59,130,246,${a * 0.6})`);
-            fill(fx | 0, (fy | 0) + 1, `rgba(59,130,246,${a * 0.6})`);
-          } else {
-            fill(fx | 0, fy | 0, `rgba(59,130,246,${a})`);
-          }
-        }
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 7 (0.55 → 0.70): scanlines + CRT vignette
-         ═══════════════════════════════════════ */
-      const crtP = ease(0.55, 0.70);
-      if (crtP > 0) {
-        // scanlines
-        for (let r = 0; r < rows; r += 2) {
-          ctx.fillStyle = `rgba(0,0,0,${0.06 * crtP})`;
-          ctx.fillRect(0, r * px, w, 1);
-        }
-        // vignette corners
-        const vigR = Math.max(w, h) * 0.7;
-        const grad = ctx.createRadialGradient(w / 2, h / 2, vigR * 0.4, w / 2, h / 2, vigR);
-        grad.addColorStop(0, "rgba(0,0,0,0)");
-        grad.addColorStop(1, `rgba(0,0,0,${0.4 * crtP})`);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 8 (0.60 → 0.75): HUD elements
-         ═══════════════════════════════════════ */
-      const hudP = ease(0.60, 0.75);
-      if (hudP > 0) {
-        // REC dot — pulses
-        const recBlink = Math.sin(t * 3) > 0 ? 1 : 0.3;
-        ctx.fillStyle = `rgba(255,50,50,${hudP * recBlink})`;
-        ctx.fillRect(6 * px, 4 * px, px - 1, px - 1);
-        ctx.fillStyle = `rgba(255,50,50,${hudP * recBlink * 0.4})`;
-        ctx.fillRect(7 * px, 4 * px, px - 1, px - 1);
-        // REC text
-        ctx.fillStyle = `rgba(255,255,255,${hudP * 0.7})`;
-        ctx.font = `bold ${px * 1.4}px monospace`;
-        ctx.fillText("REC", 9 * px, 5.2 * px);
-
-        // Timecode — bottom right
-        const totalFrames = Math.floor(progress * 900);
-        const mm = String(Math.floor(totalFrames / 1800)).padStart(2, "0");
-        const ss = String(Math.floor((totalFrames % 1800) / 30)).padStart(2, "0");
-        const ff = String(totalFrames % 30).padStart(2, "0");
-        ctx.fillStyle = `rgba(255,255,255,${hudP * 0.3})`;
-        ctx.font = `${px * 1.1}px monospace`;
-        ctx.fillText(`${mm}:${ss}:${ff}`, (cols - 14) * px, (rows - 3) * px);
-
-        // Crosshair brackets (center)
-        const chX = Math.floor(cols / 2);
-        const chY = Math.floor(rows / 2);
-        const chS = 3;
-        const chA = hudP * 0.15;
-        // top-left bracket
-        fillRect(chX - lensR - chS, chY - lensR - chS, chS, 1, `rgba(255,255,255,${chA})`);
-        fillRect(chX - lensR - chS, chY - lensR - chS, 1, chS, `rgba(255,255,255,${chA})`);
-        // top-right bracket
-        fillRect(chX + lensR + 1, chY - lensR - chS, chS, 1, `rgba(255,255,255,${chA})`);
-        fillRect(chX + lensR + chS, chY - lensR - chS, 1, chS, `rgba(255,255,255,${chA})`);
-        // bottom-left bracket
-        fillRect(chX - lensR - chS, chY + lensR + chS, chS, 1, `rgba(255,255,255,${chA})`);
-        fillRect(chX - lensR - chS, chY + lensR + 1, 1, chS, `rgba(255,255,255,${chA})`);
-        // bottom-right bracket
-        fillRect(chX + lensR + 1, chY + lensR + chS, chS, 1, `rgba(255,255,255,${chA})`);
-        fillRect(chX + lensR + chS, chY + lensR + 1, 1, chS, `rgba(255,255,255,${chA})`);
-
-        // ISO / aperture readout
-        ctx.fillStyle = `rgba(255,255,255,${hudP * 0.2})`;
-        ctx.font = `${px * 1}px monospace`;
-        ctx.fillText("ISO 400", 6 * px, (rows - 3) * px);
-        ctx.fillText("f/2.8", 6 * px, (rows - 1.5) * px);
-
-        // Battery icon top-right
-        const batX = cols - 8;
-        fillRect(batX, 4, 5, 3, `rgba(255,255,255,${hudP * 0.15})`);
-        fillRect(batX + 5, 5, 1, 1, `rgba(255,255,255,${hudP * 0.15})`);
-        fillRect(batX + 1, 5, 3, 1, `rgba(100,200,100,${hudP * 0.3})`);
-      }
-
-      /* ═══════════════════════════════════════
-         Phase 9 (0.70 → 0.85): lens flare burst
-         ═══════════════════════════════════════ */
-      const flareP = ease(0.70, 0.85);
-      if (flareP > 0) {
-        const flareIntensity = Math.sin(flareP * Math.PI); // peaks at 0.5
-        // radial rays from lens center
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 + t * 0.2;
-          for (let d = lensR + 2; d < lensR + 8 + flareIntensity * 6; d++) {
-            const rx = Math.round(lensX + Math.cos(angle) * d);
-            const ry = Math.round(lensY + Math.sin(angle) * d);
-            const falloff = 1 - (d - lensR - 2) / (8 + flareIntensity * 6);
-            fill(rx, ry, `rgba(59,130,246,${flareIntensity * falloff * 0.25})`);
-          }
-        }
-        // soft glow around lens
-        fillCircle(lensX, lensY, lensR + 2, `rgba(59,130,246,${flareIntensity * 0.06})`);
-      }
-
-      /* ═══════════════════════════════════════
-         Ambient: subtle camera body "breathing"
-         ═══════════════════════════════════════ */
-      if (bodyP >= 1) {
-        const breathe = Math.sin(t * 0.8) * 0.02;
-        // subtle color shift on body highlight
-        fillRect(camX + 1, camY + 1, camW - 2, 1, `rgba(59,130,246,${breathe + 0.02})`);
-      }
-    },
-    []
-  );
-
-  /* ── canvas setup + animation loop ── */
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
+    const wrap = canvasWrapRef.current;
+    if (!canvas || !wrap) return;
+    function resize() {
       const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    };
+      const rect = wrap!.getBoundingClientRect();
+      canvas!.width = rect.width * dpr;
+      canvas!.height = rect.height * dpr;
+      canvas!.style.width = rect.width + "px";
+      canvas!.style.height = rect.height + "px";
+      const ctx = canvas!.getContext("2d");
+      if (ctx) ctx.scale(dpr, dpr);
+      draw(progressRef.current);
+    }
     resize();
     window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, [draw]);
 
-    const animate = () => {
-      const rect = canvas.getBoundingClientRect();
-      drawScene(ctx, rect.width, rect.height, progressRef.current);
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
+  useEffect(() => { draw(0); }, [draw]);
 
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [drawScene]);
+  useMotionValueEvent(scrollYProgress, "change", (progress) => {
+    progressRef.current = progress;
+    requestAnimationFrame(() => draw(progress));
+  });
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative z-10"
-      style={{ height: "300vh" }}
-    >
+    <section ref={sectionRef} className="relative z-10" style={{ height: "300vh" }}>
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden bg-black">
-        {/* Floating keywords — full viewport */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[5] hidden select-none overflow-hidden sm:block"
-          aria-hidden="true"
-        >
-          <motion.div style={{ x: word1X, opacity: word1Opacity }} className="absolute left-0 top-[12%] w-full whitespace-nowrap font-[var(--font-outfit)] text-[clamp(40px,10vw,140px)] font-black uppercase tracking-[-3px] text-[var(--color-accent-blue)]">CAPTURE</motion.div>
-          <motion.div style={{ x: word2X, opacity: word2Opacity }} className="absolute left-0 top-[28%] w-full whitespace-nowrap font-[var(--font-outfit)] text-[clamp(36px,8vw,120px)] font-black uppercase tracking-[-2px] text-[var(--color-accent-blue)]">STORIES</motion.div>
-          <motion.div style={{ x: word3X, opacity: word3Opacity }} className="absolute left-0 top-[48%] w-full whitespace-nowrap font-[var(--font-outfit)] text-[clamp(44px,12vw,160px)] font-black uppercase tracking-[-4px] text-[var(--color-accent-blue)]">CREATE</motion.div>
-          <motion.div style={{ x: word4X, opacity: word4Opacity }} className="absolute left-0 top-[65%] w-full whitespace-nowrap font-[var(--font-outfit)] text-[clamp(32px,7vw,100px)] font-black uppercase tracking-[-2px] text-[var(--color-accent-blue)]">EVERY ANGLE</motion.div>
-          <motion.div style={{ x: word5X, opacity: word5Opacity }} className="absolute left-0 top-[82%] w-full whitespace-nowrap font-[var(--font-outfit)] text-[clamp(38px,9vw,130px)] font-black uppercase tracking-[-3px] text-[var(--color-accent-blue)]">BROADCAST</motion.div>
+        {/* Continuous marquee text — single line across the middle */}
+        <div className="pointer-events-none absolute inset-0 z-[5] hidden select-none overflow-hidden sm:flex sm:items-end sm:pb-[12%]" aria-hidden="true">
+          <motion.div
+            style={{ x: marqueeX, opacity: marqueeOpacity }}
+            className="whitespace-nowrap font-[var(--font-outfit)] text-[clamp(60px,12vw,160px)] font-black uppercase tracking-[-4px] text-[var(--color-accent-blue)]"
+          >
+            CAPTURE &middot; STORIES &middot; CREATE &middot; BROADCAST &middot; EVERY ANGLE &middot; PRODUCE &middot; DIRECT &middot; FILM &middot; EDIT &middot; INSPIRE &middot; RECORD &middot; SHARE &middot; AMPLIFY &middot; VISION &middot; MOTION
+          </motion.div>
         </div>
 
-        {/* Pixel art camera — progressively assembles as you scroll */}
-        <motion.div
-          style={{ opacity: sceneOpacity, scale: sceneScale }}
-          className="absolute inset-0 z-[1] sm:left-auto sm:right-0 sm:w-[55%]"
-        >
-          <canvas
-            ref={canvasRef}
-            className="h-full w-full"
-            style={{ imageRendering: "pixelated" }}
-          />
+        {/* Canvas */}
+        <motion.div ref={canvasWrapRef} style={{ opacity: canvasOpacity }} className="absolute inset-0 z-[1] sm:left-auto sm:right-0 sm:w-[55%]">
+          <canvas ref={canvasRef} className="absolute inset-0" style={{ background: "transparent" }} />
         </motion.div>
 
-        {/* Scroll progress indicator */}
-        <motion.div
-          style={{ opacity: progressVisible }}
-          className="fixed left-6 top-1/2 z-[100] hidden -translate-y-1/2 sm:block"
-        >
+        {/* Scroll progress */}
+        <motion.div style={{ opacity: progressVisible }} className="fixed left-6 top-1/2 z-[100] hidden -translate-y-1/2 sm:block">
           <div className="h-[120px] w-[2px] rounded-full bg-white/[0.06]">
-            <motion.div
-              style={{ height: progressHeight }}
-              className="w-full rounded-full bg-[var(--color-accent-blue)]"
-            />
+            <motion.div style={{ height: progressHeight }} className="w-full rounded-full bg-[var(--color-accent-blue)]" />
           </div>
-          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap font-[var(--font-outfit)] text-[10px] uppercase tracking-[2px] text-[var(--color-text-muted)]">
-            scroll
-          </div>
+          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap font-[var(--font-outfit)] text-[10px] uppercase tracking-[2px] text-[var(--color-text-muted)]">scroll</div>
         </motion.div>
 
         {/* Left text column */}
         <div className="absolute left-4 top-1/2 z-10 max-w-[85vw] -translate-y-1/2 sm:left-[8%] sm:max-w-[420px]">
-          <motion.div
-            style={{ opacity: labelOpacity }}
-            className="mb-3 font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:text-[13px] sm:tracking-[6px]"
-          >
+          <motion.div style={{ opacity: labelOpacity }} className="mb-3 font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:text-[13px] sm:tracking-[6px]">
             002 / What We Are
           </motion.div>
-
           <motion.p style={{ opacity: line1Opacity, y: line1Y }} className="font-[var(--font-outfit)] text-[clamp(18px,5vw,36px)] font-light leading-relaxed">
             we&apos;re not just a club.
           </motion.p>
           <motion.p style={{ opacity: line2Opacity, y: line2Y }} className="font-[var(--font-outfit)] text-[clamp(18px,5vw,36px)] font-light leading-relaxed">
-            we&apos;re the <strong className="font-bold">lens</strong>, the{" "}
-            <strong className="font-bold">voice</strong>,
+            we&apos;re the <strong className="font-bold">lens</strong>, the{" "}<strong className="font-bold">voice</strong>,
           </motion.p>
           <motion.p style={{ opacity: line3Opacity, y: line3Y }} className="font-[var(--font-outfit)] text-[clamp(18px,5vw,36px)] font-light leading-relaxed">
-            and the{" "}
-            <em className="text-[var(--color-accent-blue)]">creative pulse</em>
+            and the{" "}<em className="text-[var(--color-accent-blue)]">creative pulse</em>
           </motion.p>
           <motion.p style={{ opacity: line4Opacity, y: line4Y }} className="font-[var(--font-outfit)] text-[clamp(18px,5vw,36px)] font-light leading-relaxed">
             of Stuyvesant.
           </motion.p>
-
           <motion.p style={{ opacity: subOpacity, y: subY }} className="mt-4 font-[var(--font-outfit)] text-[clamp(12px,3vw,18px)] font-light leading-relaxed text-[var(--color-text-muted)] sm:mt-6">
-            eight departments. twenty-six leaders.
-            <br />
-            <span className="text-[var(--color-accent-blue)]">
-              every moving part — in perfect sync.
-            </span>
+            eight departments. twenty-six leaders.<br />
+            <span className="text-[var(--color-accent-blue)]">every moving part — in perfect sync.</span>
           </motion.p>
         </div>
       </div>
