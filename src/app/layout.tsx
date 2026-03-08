@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ParallaxBackground } from "@/components/effects/ParallaxBackground";
 import { CustomCursor } from "@/components/effects/CustomCursor";
 import { MobileDisclaimer } from "@/components/ui/MobileDisclaimer";
+import { PageTransitionProvider } from "@/components/effects/PageTransition";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,14 +51,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${outfit.variable} font-sans antialiased`}>
-        <CustomCursor />
-        <MobileDisclaimer />
-        <ParallaxBackground />
-        <div className="relative z-10 flex flex-col min-h-screen">
-          <KineticNavigation />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <PageTransitionProvider>
+          <CustomCursor />
+          <MobileDisclaimer />
+          <ParallaxBackground />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <KineticNavigation />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </PageTransitionProvider>
       </body>
     </html>
   );

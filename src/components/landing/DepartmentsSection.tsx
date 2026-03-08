@@ -2,13 +2,33 @@
 
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { usePageTransition } from "@/components/effects/PageTransition";
 
 const siteLinks = [
-  { number: "01", name: "Videos", href: "/videos", description: "Watch our latest productions, interviews, and event coverage" },
-  { number: "02", name: "Instagram", href: "/instagram", description: "Behind-the-scenes photography and highlights from @stuycast" },
-  { number: "03", name: "About Us", href: "/about", description: "Our mission, our team, and how we bring Stuy's stories to life" },
-  { number: "04", name: "Join", href: "/join", description: "Apply to become a member of StuyCast" },
+  {
+    number: "01",
+    name: "Videos",
+    href: "/videos",
+    description: "Watch our latest productions, interviews, and event coverage",
+  },
+  {
+    number: "02",
+    name: "Instagram",
+    href: "/instagram",
+    description: "Behind-the-scenes photography and highlights from @stuycast",
+  },
+  {
+    number: "03",
+    name: "About Us",
+    href: "/about",
+    description: "Our mission, our team, and how we bring Stuy's stories to life",
+  },
+  {
+    number: "04",
+    name: "Join",
+    href: "/join",
+    description: "Apply to become a member of StuyCast",
+  },
 ] as const;
 
 function SiteLinkItem({
@@ -22,6 +42,7 @@ function SiteLinkItem({
     threshold: 0.15,
     rootMargin: "0px 0px -50px 0px",
   });
+  const { transition, isTransitioning } = usePageTransition();
 
   return (
     <motion.div
@@ -34,9 +55,10 @@ function SiteLinkItem({
         ease: [0.16, 1, 0.3, 1],
       }}
     >
-      <Link
-        href={link.href}
-        className="dept-item-row group relative flex items-center justify-between border-b border-white/[0.06] py-9 transition-all duration-[400ms]"
+      <button
+        onClick={() => !isTransitioning && transition(link.href)}
+        disabled={isTransitioning}
+        className="dept-item-row group relative flex w-full items-center justify-between border-b border-white/[0.06] py-9 transition-all duration-[400ms] text-left"
       >
         {/* Hover accent dot */}
         <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[var(--color-accent-blue)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -55,7 +77,7 @@ function SiteLinkItem({
         <span className="ml-4 font-[var(--font-outfit)] text-[20px] text-[var(--color-accent-blue)] opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
           →
         </span>
-      </Link>
+      </button>
     </motion.div>
   );
 }
