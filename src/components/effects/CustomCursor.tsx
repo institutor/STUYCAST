@@ -2,16 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-/**
- * Custom cursor with morphing text-hover effect.
- *
- * - Small dot follows the mouse instantly
- * - Ring trails with lerp smoothing
- * - When hovering over text elements, the ring expands into a large circle
- *   with mix-blend-difference, creating an inverted-color lens effect
- * - Hidden on touch devices
- */
-
 const TEXT_SELECTORS = "h1,h2,h3,h4,h5,h6,p,span,a,button,li,label,strong,em,b,i,blockquote,td,th";
 const INTERACTIVE_SELECTORS = "a, button, input, textarea, select, [role='button']";
 
@@ -59,9 +49,7 @@ export function CustomCursor() {
     };
 
     const isTextNode = (el: HTMLElement): boolean => {
-      // Check if the element itself matches text selectors
       if (el.matches(TEXT_SELECTORS)) {
-        // Only trigger if the element has actual visible text content
         const text = el.textContent?.trim();
         if (text && text.length > 0) return true;
       }

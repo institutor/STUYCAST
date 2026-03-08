@@ -585,10 +585,24 @@ function StoryViewerModal({
                 type="button"
                 className={cn(
                   "inline-flex items-center justify-center rounded-md",
-                  "h-8 w-8 text-white hover:bg-white/20 transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                  "h-10 w-10 text-white hover:bg-white/20 transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                  "touch-none"
                 )}
-                onPointerDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onClose();
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onClose();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose();

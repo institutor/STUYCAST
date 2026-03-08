@@ -1,16 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { AnimatedBackground } from "./AnimatedBackground";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { StarField } from "./StarField";
+
+// Lazy load particle canvas — only on desktop
+const AnimatedBackground = dynamic(
+  () => import("./AnimatedBackground").then((m) => ({ default: m.AnimatedBackground })),
+  { ssr: false }
+);
 
 export function ParallaxBackground() {
   const auroraRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    setIsDesktop(!isTouch);
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion || isTouch) return;
 
     let rafId: number;
@@ -40,11 +49,13 @@ export function ParallaxBackground() {
 
   return (
     <>
-      <div ref={auroraRef} className="fixed inset-0 z-0 will-change-transform" aria-hidden="true">
-        <AnimatedBackground />
-      </div>
+      {isDesktop && (
+        <div ref={auroraRef} className="fixed inset-0 z-0 will-change-transform" aria-hidden="true">
+          <AnimatedBackground />
+        </div>
+      )}
       <div ref={starsRef} className="fixed inset-0 z-0 will-change-transform" aria-hidden="true">
-        <StarField count={15} />
+        <StarField count={isDesktop ? 15 : 8} />
       </div>
     </>
   );

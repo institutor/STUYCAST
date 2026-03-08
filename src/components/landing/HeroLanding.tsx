@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { HeroShutterTitle } from "@/components/ui/hero-shutter-title";
+import { BackgroundPaths } from "@/components/ui/background-paths";
 
 export function HeroLanding() {
   const ref = useRef<HTMLElement>(null);
@@ -21,6 +22,9 @@ export function HeroLanding() {
       ref={ref}
       className="relative flex h-screen flex-col items-center justify-center overflow-hidden"
     >
+      {/* Animated line paths background */}
+      <BackgroundPaths />
+
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div
@@ -43,13 +47,13 @@ export function HeroLanding() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-3 px-4 text-center font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:px-0 sm:text-[13px] sm:tracking-[6px]"
+        className="relative z-10 mb-3 px-4 text-center font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:px-0 sm:text-[13px] sm:tracking-[6px]"
       >
         001 / Stuyvesant&apos;s Creative Pulse
       </motion.div>
 
       {/* Title with shutter animation */}
-      <motion.div style={{ y: titleY, opacity: titleOpacity }}>
+      <motion.div className="relative z-10" style={{ y: titleY, opacity: titleOpacity }}>
         <HeroShutterTitle />
       </motion.div>
 
@@ -59,7 +63,7 @@ export function HeroLanding() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-6 px-6 text-center font-[var(--font-outfit)] text-[12px] font-light uppercase tracking-[2px] text-[var(--color-text-muted)] sm:mt-8 sm:px-0 sm:text-[16px] sm:tracking-[3px]"
+        className="relative z-10 mt-6 px-6 text-center font-[var(--font-outfit)] text-[12px] font-light uppercase tracking-[2px] text-[var(--color-text-muted)] sm:mt-8 sm:px-0 sm:text-[16px] sm:tracking-[3px]"
       >
         Every story · Every angle · Every moment
       </motion.p>
@@ -69,7 +73,7 @@ export function HeroLanding() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-10 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2"
+        className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2"
       >
         <span className="font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-text-muted)]">
           Scroll

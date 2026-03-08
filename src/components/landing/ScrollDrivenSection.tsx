@@ -359,7 +359,8 @@ function drawNoise(
   density: number, seed: number
 ) {
   const rand = mulberry32(seed);
-  const step = 4;
+  // Larger step on small screens = fewer iterations
+  const step = cw < 600 ? 8 : 4;
   for (let y = 0; y < ch; y += step) {
     for (let x = 0; x < cw; x += step) {
       if (rand() < density) {
@@ -620,9 +621,13 @@ export function ScrollDrivenSection() {
     offset: ["start start", "end end"],
   });
 
-  // Continuous marquee text — scrolls slowly from right to left near the bottom
-  const marqueeX = useTransform(scrollYProgress, [0.05, 0.95], ["30%", "-80%"]);
-  const marqueeOpacity = useTransform(scrollYProgress, [0.05, 0.12, 0.85, 0.95], [0, 0.08, 0.08, 0]);
+  // Continuous marquee text — peaks in the middle of the scroll, fades at edges
+  const marqueeX = useTransform(scrollYProgress, [0.05, 1], ["15%", "-30%"]);
+  const marqueeOpacity = useTransform(
+    scrollYProgress,
+    [0.05, 0.15, 0.40, 0.55, 0.80, 0.95],
+    [0,    0.06,  0.20, 0.20, 0.06, 0]
+  );
 
   // Text reveal transforms
   const labelOpacity = useTransform(scrollYProgress, [0.03, 0.08], [0, 1]);
@@ -643,7 +648,7 @@ export function ScrollDrivenSection() {
   );
   const canvasOpacity = useTransform(
     scrollYProgress,
-    [0, 0.06, 0.14, 0.88, 0.96],
+    [0, 0.06, 0.14, 0.95, 1],
     [0, 0, 1, 1, 0]
   );
 
@@ -651,7 +656,7 @@ export function ScrollDrivenSection() {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     drawScene(ctx, canvas.width / dpr, canvas.height / dpr, progress);
   }, []);
 
@@ -660,7 +665,8 @@ export function ScrollDrivenSection() {
     const wrap = canvasWrapRef.current;
     if (!canvas || !wrap) return;
     function resize() {
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR at 2 for performance on high-DPI screens
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = wrap!.getBoundingClientRect();
       canvas!.width = rect.width * dpr;
       canvas!.height = rect.height * dpr;
@@ -685,8 +691,8 @@ export function ScrollDrivenSection() {
   return (
     <section ref={sectionRef} className="relative z-10" style={{ height: "300vh" }}>
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden bg-black">
-        {/* Continuous marquee text — single line across the middle */}
-        <div className="pointer-events-none absolute inset-0 z-[5] hidden select-none overflow-hidden sm:flex sm:items-end sm:pb-[12%]" aria-hidden="true">
+        {/* Continuous marquee text — single line near the bottom */}
+        <div className="pointer-events-none absolute inset-0 z-[5] flex select-none items-end overflow-hidden pb-[3%]" aria-hidden="true">
           <motion.div
             style={{ x: marqueeX, opacity: marqueeOpacity }}
             className="whitespace-nowrap font-[var(--font-outfit)] text-[clamp(60px,12vw,160px)] font-black uppercase tracking-[-4px] text-[var(--color-accent-blue)]"
@@ -695,8 +701,8 @@ export function ScrollDrivenSection() {
           </motion.div>
         </div>
 
-        {/* Canvas */}
-        <motion.div ref={canvasWrapRef} style={{ opacity: canvasOpacity }} className="absolute inset-0 z-[1] sm:left-auto sm:right-0 sm:w-[55%]">
+        {/* Canvas — full bleed on mobile (behind text), right half on desktop */}
+        <motion.div ref={canvasWrapRef} style={{ opacity: canvasOpacity }} className="absolute inset-0 z-[1] opacity-60 sm:opacity-100 sm:left-auto sm:right-0 sm:w-[55%]">
           <canvas ref={canvasRef} className="absolute inset-0" style={{ background: "transparent" }} />
         </motion.div>
 

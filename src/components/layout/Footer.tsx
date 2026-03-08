@@ -4,7 +4,6 @@ import Link from "next/link";
 import { footerQuickLinks } from "@/data/navigation";
 import { socialLinks } from "@/data/social-links";
 import { SocialIcon } from "@/components/ui/SocialIcon";
-import { SubscribeForm } from "@/components/forms/SubscribeForm";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { motion } from "framer-motion";
 
@@ -128,15 +127,30 @@ export function Footer() {
             </p>
           </FooterReveal>
 
-          {/* Subscribe */}
+          {/* Quick facts */}
           <FooterReveal delay={0.3}>
             <div className="mb-4 font-[var(--font-outfit)] text-[11px] uppercase tracking-[4px] text-[var(--color-accent-blue)]">
-              Stay Connected
+              By the Numbers
             </div>
-            <p className="mb-4 font-[var(--font-outfit)] text-[13px] font-light text-white/30">
-              New episodes, behind-the-scenes, zero spam.
-            </p>
-            <SubscribeForm />
+            <div className="flex flex-col gap-4">
+              {[
+                { value: "700K+", label: "Impressions" },
+                { value: "100+", label: "Members" },
+                { value: "55+", label: "Posts" },
+                { value: "EST. 2019", label: "" },
+              ].map((stat) => (
+                <div key={stat.value} className="flex items-baseline justify-between border-b border-white/[0.04] pb-3">
+                  <span className="font-[var(--font-outfit)] text-[20px] font-bold tracking-[-0.5px] text-white/60">
+                    {stat.value}
+                  </span>
+                  {stat.label && (
+                    <span className="font-[var(--font-outfit)] text-[11px] uppercase tracking-[2px] text-white/20">
+                      {stat.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </FooterReveal>
         </div>
 
