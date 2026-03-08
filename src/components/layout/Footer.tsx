@@ -116,9 +116,9 @@ export function Footer() {
               About
             </div>
             <p className="font-[var(--font-outfit)] text-[14px] font-light leading-relaxed text-white/30">
-              StuyCast is Stuyvesant High School&apos;s student-run media
-              organization, founded in 2022. We capture, create, and
-              broadcast the stories that define our community.
+              StuyCast is the largest media production club at Stuyvesant
+              High School, founded in 2022. From event coverage and photography
+              to video production &mdash; we tell the stories that define Stuy.
             </p>
             <p className="mt-4 font-[var(--font-outfit)] text-[14px] font-light leading-relaxed text-white/30">
               Eight departments. Twenty-six leaders.

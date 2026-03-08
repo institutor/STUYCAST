@@ -3,8 +3,14 @@
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+// Seeded random to avoid hydration mismatch
+function seededRandom(seed: number) {
+  const x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
 function FloatingPaths({ position }: { position: number }) {
-  const paths = Array.from({ length: 36 }, (_, i) => ({
+  const paths = Array.from({ length: 16 }, (_, i) => ({
     id: i,
     d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
       380 - i * 5 * position
@@ -13,32 +19,30 @@ function FloatingPaths({ position }: { position: number }) {
     } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
       684 - i * 5 * position
     } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    width: 0.5 + i * 0.03,
+    width: 0.2 + i * 0.01,
+    // Opacity ramps from subtle at edges to more visible in center
+    opacity: 0.35 + (i / 15) * 0.50,
+    duration: 20 + seededRandom(i * position) * 10,
   }));
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      <svg
-        className="w-full h-full"
-        viewBox="0 0 696 316"
-        fill="none"
-      >
-        <title>Background Paths</title>
+      <svg className="w-full h-full" viewBox="0 0 696 316" fill="none">
         {paths.map((path) => (
           <motion.path
             key={path.id}
             d={path.d}
-            stroke="rgba(59,130,246,0.15)"
+            stroke="rgba(59,130,246,1)"
             strokeWidth={path.width}
-            strokeOpacity={0.05 + path.id * 0.02}
-            initial={{ pathLength: 0.3, opacity: 0.6 }}
+            strokeOpacity={path.opacity}
+            initial={{ pathLength: 0.3, opacity: 0 }}
             animate={{
               pathLength: 1,
-              opacity: [0.3, 0.6, 0.3],
+              opacity: [path.opacity * 0.6, path.opacity, path.opacity * 0.6],
               pathOffset: [0, 1, 0],
             }}
             transition={{
-              duration: 20 + Math.random() * 10,
+              duration: path.duration,
               repeat: Number.POSITIVE_INFINITY,
               ease: "linear",
             }}
@@ -52,16 +56,14 @@ function FloatingPaths({ position }: { position: number }) {
 const MemoizedFloatingPaths = memo(FloatingPaths);
 
 export function BackgroundPaths() {
-  // Only render path animations on desktop to save mobile perf
-  const [shouldAnimate, setShouldAnimate] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setShouldAnimate(!isTouch && !prefersReduced);
+    if (!prefersReduced) setMounted(true);
   }, []);
 
-  if (!shouldAnimate) return null;
+  if (!mounted) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">

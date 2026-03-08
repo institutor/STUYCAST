@@ -307,16 +307,6 @@ function drawFloatingParticles(
   ctx.globalAlpha = 1;
 }
 
-function drawScanlines(
-  ctx: CanvasRenderingContext2D,
-  cw: number, ch: number,
-  alpha: number
-) {
-  ctx.fillStyle = `rgba(0,0,0,${alpha})`;
-  for (let y = 0; y < ch; y += 3) {
-    ctx.fillRect(0, y, cw, 1);
-  }
-}
 
 function drawVignette(
   ctx: CanvasRenderingContext2D,
@@ -604,7 +594,6 @@ function drawScene(
   }
 
   // Global overlays
-  drawScanlines(ctx, cw, ch, 0.05);
   drawVignette(ctx, cw, ch, 0.5);
   drawEdgeFade(ctx, cw, ch);
 }

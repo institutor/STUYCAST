@@ -14,7 +14,8 @@ export const manualStories: {
   type: "image" | "video";
   src: string;
 }[] = [
-  // Example entries — replace with your own:
-  // { id: "story-1", type: "image", src: "/stories/behind-the-scenes.jpg" },
-  // { id: "story-2", type: "video", src: "/stories/event-recap.mp4" },
+  { id: "story-1", type: "image", src: "/stories/story-1.jpg" },
+  { id: "story-2", type: "image", src: "/stories/story-2.jpg" },
+  { id: "story-3", type: "image", src: "/stories/story-3.jpg" },
+  { id: "story-4", type: "image", src: "/stories/story-4.jpg" },
 ];

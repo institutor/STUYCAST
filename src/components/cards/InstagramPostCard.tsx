@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCount, truncate } from "@/lib/utils";
@@ -11,18 +14,39 @@ interface InstagramPostCardProps {
 }
 
 export function InstagramPostCard({ post, className }: InstagramPostCardProps) {
+  const [imgError, setImgError] = useState(false);
+  const imgSrc = post.media_type === "VIDEO" ? (post.thumbnail_url || null) : post.media_url;
+
   return (
     <TiltWrapper>
     <GlassCard padding="none" className={cn("group", className)}>
       <a href={post.permalink} target="_blank" rel="noopener noreferrer">
-        <div className="relative aspect-square overflow-hidden rounded-t-2xl">
-          <Image
-            src={post.media_type === "VIDEO" ? (post.thumbnail_url || post.media_url) : post.media_url}
-            alt={post.caption ? truncate(post.caption, 100) : "Instagram post"}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
+        <div className="relative aspect-square overflow-hidden rounded-t-2xl bg-slate-800">
+          {imgSrc && !imgError ? (
+            <Image
+              src={imgSrc}
+              alt={post.caption ? truncate(post.caption, 100) : "Instagram post"}
+              fill
+              unoptimized
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              sizes="(max-width: 768px) 50vw, 25vw"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+              <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url('/logo.png')", backgroundSize: "40%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }} />
+              <div className="relative flex items-center justify-center w-14 h-14 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-3">
+                <svg className="w-6 h-6 text-white/50 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+              {post.caption && (
+                <p className="text-[10px] text-white/30 text-center px-4 line-clamp-2 max-w-[80%]">
+                  {truncate(post.caption, 60)}
+                </p>
+              )}
+            </div>
+          )}
           {post.media_type === "VIDEO" && (
             <div className="absolute top-3 right-3">
               <svg className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">

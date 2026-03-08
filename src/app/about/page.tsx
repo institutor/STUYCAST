@@ -3,11 +3,10 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { RevealSection } from "@/components/ui/RevealSection";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { StoriesBar } from "@/components/ui/StoriesBar";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Learn about StuyCast - Stuyvesant High School's premier media club.",
+  description: "Learn about StuyCast - the largest media production club at Stuyvesant High School.",
 };
 
 export default function AboutPage() {
@@ -16,13 +15,11 @@ export default function AboutPage() {
       <RevealSection>
         <PageTitle
           glitchText="About StuyCast"
-          subtitle="Our mission, our team, and how we bring Stuyvesant's stories to life."
+          subtitle="Stuyvesant's largest media production club — covering events, producing videos, and telling the stories that matter."
         >
           About <span className="text-blue-400">StuyCast</span>
         </PageTitle>
       </RevealSection>
-
-      <StoriesBar />
 
       {/* Animated stats counters */}
       <RevealSection>
@@ -39,10 +36,10 @@ export default function AboutPage() {
           <GlassCard padding="lg">
             <h2 className="text-xl font-bold text-white mb-4">Why we&apos;re here</h2>
             <p className="text-slate-300 leading-relaxed">
-              Stuy has a million stories &mdash; sports wins, hallway drama, senior year chaos,
-              that one teacher everyone loves. We&apos;re the kids who thought: why not tell those
-              stories really, really well? StuyCast is student-run, student-shot, and student-edited.
-              No adults hovering. Just us and our cameras.
+              StuyCast is the largest media production club at Stuyvesant. From SOS showcases
+              and Clubs &amp; Pubs Fair recaps to wrestling highlight reels and photography
+              competitions &mdash; if it&apos;s happening at Stuy, we&apos;re there covering it.
+              Everything is student-run, student-shot, and student-edited.
             </p>
           </GlassCard>
         </RevealSection>
@@ -60,8 +57,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Videos</h3>
                 <p className="text-sm text-slate-400">
-                  Game days, events, the occasional vlog that goes off the rails.
-                  If it&apos;s happening at Stuy, we&apos;re probably filming it.
+                  Event recaps, talent show promos, club spotlights, and drone footage
+                  of StuySquad dance crews. If it moves, we film it.
                 </p>
               </div>
               <div>
@@ -74,8 +71,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Social Media</h3>
                 <p className="text-sm text-slate-400">
-                  The unfiltered, behind-the-scenes chaos that doesn&apos;t make the final cut.
-                  Follow for bonus content and accidental bloopers.
+                  Photography showcases, behind-the-scenes content, and event coverage
+                  across Instagram. Follow @stuycast for the latest.
                 </p>
               </div>
             </div>
@@ -86,9 +83,9 @@ export default function AboutPage() {
           <GlassCard padding="lg">
             <h2 className="text-xl font-bold text-white mb-4">Come make stuff with us</h2>
             <p className="text-slate-300 leading-relaxed mb-4">
-              Doesn&apos;t matter if you&apos;ve never touched a camera or can&apos;t tell a
-              condenser mic from a lav mic. We&apos;ll teach you. We just need people who care
-              about making cool things and don&apos;t mind staying after school sometimes.
+              No experience needed. Whether you&apos;re into filming, video editing, photography,
+              business, art, or anything in between &mdash; there&apos;s a place for you.
+              Both leadership and member applications open each semester.
             </p>
             <a
               href="/join"

@@ -49,7 +49,7 @@ export function HeroLanding() {
         transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mb-3 px-4 text-center font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:px-0 sm:text-[13px] sm:tracking-[6px]"
       >
-        001 / Stuyvesant&apos;s Creative Pulse
+        001 / Stuyvesant&apos;s Largest Media Production Club
       </motion.div>
 
       {/* Title with shutter animation */}

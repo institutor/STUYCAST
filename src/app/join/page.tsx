@@ -4,7 +4,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 
 export const metadata: Metadata = {
   title: "Join StuyCast",
-  description: "Join Stuyvesant High School's premier media club. Apply to become a member of StuyCast.",
+  description: "Join Stuyvesant's largest media production club. No experience needed — apply to become a member of StuyCast.",
 };
 
 export default function JoinPage() {
@@ -12,7 +12,7 @@ export default function JoinPage() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
       <PageTitle
         glitchText="Join StuyCast"
-        subtitle="Apply to join Stuyvesant's student-run media production team."
+        subtitle="No experience needed. Filming, editing, photography, business, art — there's a place for everyone."
       >
         Join <span className="text-blue-400">StuyCast</span>
       </PageTitle>

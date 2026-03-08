@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { VideoCard } from "@/components/cards/VideoCard";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { StoriesBar } from "@/components/ui/StoriesBar";
 import { RevealSection } from "@/components/ui/RevealSection";
 import { StaggerGrid } from "@/components/ui/StaggerGrid";
 import { allVideos } from "@/data/content";
@@ -22,8 +21,6 @@ export default function VideosPage() {
       >
         The Tapes
       </PageTitle>
-
-      <StoriesBar />
 
       {/* Featured hero video */}
       <RevealSection>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Volume2, VolumeX, Pause, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, Pause, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Story {
@@ -506,15 +506,16 @@ function StoryViewerModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+      className="fixed inset-0 z-50 bg-black"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
+      {/* Draggable media content — no buttons inside, so drag never intercepts clicks */}
       <motion.div
         ref={containerRef}
-        className="relative w-full h-full max-w-lg mx-auto flex flex-col overflow-hidden"
+        className="absolute inset-0 w-full max-w-lg mx-auto overflow-hidden"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -527,7 +528,45 @@ function StoryViewerModal({
         onPointerUp={handlePointerUp}
         onPointerLeave={() => setIsPaused(false)}
       >
-        <div className="absolute top-0 left-0 right-0 z-10 pt-2 pb-4 bg-gradient-to-b from-black/60 to-transparent">
+        <div
+          className="w-full h-full flex items-center justify-center select-none relative"
+          onClick={handleTap}
+        >
+          <AnimatePresence initial={false} custom={direction} mode="popLayout">
+            <motion.div
+              key={currentStory.id}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <StoryContent
+                story={currentStory}
+                isMuted={isMuted}
+                isInitialLoading={!isVideoReady}
+                isBuffering={isVideoBuffering}
+                onVideoReady={handleVideoReady}
+                onVideoTimeUpdate={handleVideoTimeUpdate}
+                onVideoWaiting={handleVideoWaiting}
+                onVideoPlaying={handleVideoPlaying}
+                onVideoEnded={handleVideoEnded}
+                onImageLoad={handleImageLoad}
+                videoRef={videoRef}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
+
+      {/* Header overlay — outside draggable div so pointer events work reliably */}
+      <div className="absolute top-0 left-0 right-0 z-10 max-w-lg mx-auto pointer-events-none">
+        <div className="pt-2 pb-4 bg-gradient-to-b from-black/60 to-transparent pointer-events-auto">
           <ProgressBar
             count={stories.length}
             currentIndex={currentIndex}
@@ -566,129 +605,49 @@ function StoryViewerModal({
                     "h-8 w-8 text-white hover:bg-white/20 transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                   )}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMuted((prev) => !prev);
-                  }}
+                  onClick={() => setIsMuted((prev) => !prev)}
                   aria-label={isMuted ? "Unmute" : "Mute"}
                 >
-                  {isMuted ? (
-                    <VolumeX className="w-5 h-5" />
-                  ) : (
-                    <Volume2 className="w-5 h-5" />
-                  )}
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
               )}
 
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex items-center justify-center rounded-md",
-                  "h-10 w-10 text-white hover:bg-white/20 transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
-                  "touch-none"
-                )}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onPointerUp={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onClose();
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onClose();
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                }}
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div
-          className="flex-1 flex items-center justify-center overflow-hidden select-none relative"
-          onClick={handleTap}
+      {/* Nav arrows — also outside draggable */}
+      <div className="hidden md:flex absolute inset-y-0 left-0 right-0 max-w-lg mx-auto items-center justify-between pointer-events-none px-4 z-10">
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center justify-center pointer-events-auto",
+            "h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+            "disabled:pointer-events-none disabled:opacity-50",
+            currentIndex === 0 && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={goToPrevious}
+          disabled={currentIndex === 0}
+          aria-label="Previous story"
         >
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={currentStory.id}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 },
-              }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <StoryContent
-                story={currentStory}
-                isMuted={isMuted}
-                isInitialLoading={!isVideoReady}
-                isBuffering={isVideoBuffering}
-                onVideoReady={handleVideoReady}
-                onVideoTimeUpdate={handleVideoTimeUpdate}
-                onVideoWaiting={handleVideoWaiting}
-                onVideoPlaying={handleVideoPlaying}
-                onVideoEnded={handleVideoEnded}
-                onImageLoad={handleImageLoad}
-                videoRef={videoRef}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
+          <ChevronLeft className="w-6 h-6" />
+        </button>
 
-        <div className="hidden md:flex absolute inset-y-0 left-0 right-0 items-center justify-between pointer-events-none px-4">
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center justify-center",
-              "h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors pointer-events-auto",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
-              "disabled:pointer-events-none disabled:opacity-50",
-              currentIndex === 0 && "opacity-50 cursor-not-allowed"
-            )}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              goToPrevious();
-            }}
-            disabled={currentIndex === 0}
-            aria-label="Previous story"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center justify-center",
-              "h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors pointer-events-auto",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-            )}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              goToNext();
-            }}
-            aria-label={currentIndex === stories.length - 1 ? "Close" : "Next story"}
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-      </motion.div>
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center justify-center pointer-events-auto",
+            "h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          )}
+          onClick={goToNext}
+          aria-label={currentIndex === stories.length - 1 ? "Close" : "Next story"}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
     </motion.div>
   );
 }
