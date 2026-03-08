@@ -85,7 +85,7 @@ export function Footer() {
         </div>
 
         {/* Content grid */}
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
           {/* Quick Links */}
           <FooterReveal delay={0.1}>
             <div className="mb-4 font-[var(--font-outfit)] text-[11px] uppercase tracking-[4px] text-[var(--color-accent-blue)]">
@@ -117,40 +117,14 @@ export function Footer() {
             </div>
             <p className="font-[var(--font-outfit)] text-[14px] font-light leading-relaxed text-white/30">
               StuyCast is Stuyvesant High School&apos;s student-run media
-              organization. We capture, create, and broadcast the stories
-              that define our community.
+              organization, founded in 2022. We capture, create, and
+              broadcast the stories that define our community.
             </p>
             <p className="mt-4 font-[var(--font-outfit)] text-[14px] font-light leading-relaxed text-white/30">
               Eight departments. Twenty-six leaders.
               <br />
               <span className="text-white/50">One creative vision.</span>
             </p>
-          </FooterReveal>
-
-          {/* Quick facts */}
-          <FooterReveal delay={0.3}>
-            <div className="mb-4 font-[var(--font-outfit)] text-[11px] uppercase tracking-[4px] text-[var(--color-accent-blue)]">
-              By the Numbers
-            </div>
-            <div className="flex flex-col gap-4">
-              {[
-                { value: "700K+", label: "Impressions" },
-                { value: "100+", label: "Members" },
-                { value: "55+", label: "Posts" },
-                { value: "EST. 2019", label: "" },
-              ].map((stat) => (
-                <div key={stat.value} className="flex items-baseline justify-between border-b border-white/[0.04] pb-3">
-                  <span className="font-[var(--font-outfit)] text-[20px] font-bold tracking-[-0.5px] text-white/60">
-                    {stat.value}
-                  </span>
-                  {stat.label && (
-                    <span className="font-[var(--font-outfit)] text-[11px] uppercase tracking-[2px] text-white/20">
-                      {stat.label}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
           </FooterReveal>
         </div>
 
@@ -161,7 +135,7 @@ export function Footer() {
               Developed by <span className="text-white/40">Jiewen Huang</span>
             </p>
             <p className="font-[var(--font-outfit)] text-[11px] tracking-[2px] text-white/15">
-              &copy; {new Date().getFullYear()} STUYCAST
+              EST. 2022 &middot; &copy; {new Date().getFullYear()} STUYCAST
             </p>
           </div>
         </FooterReveal>

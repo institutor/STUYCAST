@@ -1,9 +1,58 @@
 "use client";
 
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
+function SpreadingWord({
+  index,
+  centerIndex,
+  isVisible,
+  spreadProgress,
+}: {
+  index: number;
+  centerIndex: number;
+  isVisible: boolean;
+  spreadProgress: number;
+}) {
+  const offset = index - centerIndex; // -2, -1, 0, 1, 2
+  const distFromCenter = Math.abs(offset);
+  const delay = distFromCenter * 0.06;
+
+  // Spread vertically from center — each row moves proportional to its distance
+  const spreadY = offset * spreadProgress * 28;
+  // Slight horizontal drift for non-center rows
+  const spreadX = offset * spreadProgress * 8;
+  // Rows further from center get slightly more transparent
+  const baseOpacity = 0.12 - distFromCenter * 0.015;
+  // Scale rows slightly as they spread
+  const scale = 1 + spreadProgress * distFromCenter * 0.02;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scaleX: 0.3, y: 0 }}
+      animate={
+        isVisible
+          ? { opacity: baseOpacity, scaleX: 1 }
+          : {}
+      }
+      transition={{
+        duration: 0.8,
+        delay,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="whitespace-nowrap font-[var(--font-outfit)] font-black leading-[0.85] tracking-[-2px] text-[var(--color-accent-blue)] sm:tracking-[-4px]"
+      style={{
+        fontSize: "clamp(36px, 12vw, 180px)",
+        transform: `translateY(${spreadY}px) translateX(${spreadX}px) scale(${scale})`,
+        transition: "transform 0.1s linear",
+      }}
+    >
+      STUYCAST
+    </motion.div>
+  );
+}
 
 export function CTASection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -13,12 +62,22 @@ export function CTASection() {
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "start 0.3"],
+    offset: ["start end", "end start"],
   });
 
-  // Slide-in: section translates up from below
-  const sectionY = useTransform(scrollYProgress, [0, 1], [120, 0]);
-  const sectionOpacity = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
+  // Slide-in uses a separate scroll range
+  const sectionY = useTransform(scrollYProgress, [0, 0.3], [120, 0]);
+  const sectionOpacity = useTransform(scrollYProgress, [0, 0.15], [0, 1]);
+
+  // Spread progress: 0 at section entry → 1 at section exit
+  const [spread, setSpread] = useState(0);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    // Start spreading once section is ~40% scrolled in, reach max at 80%
+    const progress = Math.max(0, Math.min(1, (v - 0.3) / 0.5));
+    setSpread(progress);
+  });
+
+  const centerIndex = 2;
 
   return (
     <motion.section
@@ -35,32 +94,15 @@ export function CTASection() {
           className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center select-none overflow-hidden"
           aria-hidden="true"
         >
-          {Array.from({ length: 9 }).map((_, i) => {
-            const centerIndex = 4;
-            const distFromCenter = Math.abs(i - centerIndex);
-            const delay = distFromCenter * 0.06;
-
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scaleX: 0.3 }}
-                animate={
-                  isVisible ? { opacity: 0.06, scaleX: 1 } : {}
-                }
-                transition={{
-                  duration: 0.8,
-                  delay,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="whitespace-nowrap font-[var(--font-outfit)] font-black leading-[0.85] tracking-[-2px] text-[var(--color-accent-blue)] sm:tracking-[-4px]"
-                style={{
-                  fontSize: "clamp(36px, 12vw, 180px)",
-                }}
-              >
-                STUYCAST
-              </motion.div>
-            );
-          })}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SpreadingWord
+              key={i}
+              index={i}
+              centerIndex={centerIndex}
+              isVisible={isVisible}
+              spreadProgress={spread}
+            />
+          ))}
         </div>
 
         {/* Heading */}
