@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { detectGpuTier } from "@/hooks/useGpuTier";
 
 // Seeded random to avoid hydration mismatch
 function seededRandom(seed: number) {
@@ -63,10 +64,10 @@ export function BackgroundPaths() {
 
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (prefersReduced) return;
-    // Skip entirely on touch/mobile, reduce from 16 to 8 per group on desktop
-    if (isTouch) return;
+    const gpuTier = detectGpuTier();
+    // Skip entirely on low GPU, use 8 paths per group on high GPU
+    if (gpuTier === "low") return;
     setPathCount(8);
   }, []);
 

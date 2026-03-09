@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { detectGpuTier } from "@/hooks/useGpuTier";
 
 const TEXT_SELECTORS = "h1,h2,h3,h4,h5,h6,p,span,a,button,li,label,strong,em,b,i,blockquote,td,th";
 const INTERACTIVE_SELECTORS = "a, button, input, textarea, select, [role='button']";
@@ -18,6 +19,9 @@ export function CustomCursor() {
     const ring = ringRef.current;
     const morph = morphRef.current;
     if (!dot || !ring || !morph) return;
+
+    // Disable morph circle on low-end GPUs (mixBlendMode: difference is expensive)
+    const lowGpu = detectGpuTier() === "low";
 
     let mouseX = 0;
     let mouseY = 0;
@@ -80,7 +84,8 @@ export function CustomCursor() {
         ring.classList.remove("cursor-ring-hover");
       }
 
-      // Text morphing check
+      // Text morphing check — skip on low GPU (mixBlendMode is expensive)
+      if (lowGpu) return;
       const isText = isTextNode(target) || !!target.closest(TEXT_SELECTORS);
       if (isText && !overText) {
         overText = true;

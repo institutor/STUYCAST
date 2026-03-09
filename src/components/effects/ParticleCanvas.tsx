@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { detectGpuTier } from "@/hooks/useGpuTier";
 
 interface Particle {
   x: number;
@@ -88,12 +89,12 @@ export function ParticleCanvas() {
     if (!canvas) return;
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    isMobileRef.current = isTouch;
+    const lowGpu = detectGpuTier() === "low";
+    isMobileRef.current = lowGpu;
 
-    // Reduced particle counts for better performance
-    const maxParticles = isTouch ? 12 : 40;
-    const divisor = isTouch ? 35000 : 25000;
+    // Scale particle count based on GPU capability
+    const maxParticles = lowGpu ? 15 : 40;
+    const divisor = lowGpu ? 30000 : 25000;
 
     const handleResize = () => {
       canvas.width = window.innerWidth;

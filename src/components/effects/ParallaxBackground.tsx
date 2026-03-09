@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { StarField } from "./StarField";
+import { detectGpuTier } from "@/hooks/useGpuTier";
 
-// Lazy load particle canvas — only on desktop
+// Lazy load particle canvas — only on capable devices
 const AnimatedBackground = dynamic(
   () => import("./AnimatedBackground").then((m) => ({ default: m.AnimatedBackground })),
   { ssr: false }
@@ -13,12 +14,16 @@ const AnimatedBackground = dynamic(
 export function ParallaxBackground() {
   const auroraRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLDivElement>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isHighGpu, setIsHighGpu] = useState(false);
+  const [hasPointer, setHasPointer] = useState(false);
 
   useEffect(() => {
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    setIsDesktop(!isTouch);
+    const gpuTier = detectGpuTier();
+    setHasPointer(!isTouch);
+    setIsHighGpu(gpuTier === "high");
 
+    // Parallax scroll effect doesn't work well on touch — skip it there
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion || isTouch) return;
 
@@ -49,13 +54,13 @@ export function ParallaxBackground() {
 
   return (
     <>
-      {isDesktop && (
+      {hasPointer && isHighGpu && (
         <div ref={auroraRef} className="fixed inset-0 z-0 will-change-transform" aria-hidden="true">
           <AnimatedBackground />
         </div>
       )}
       <div ref={starsRef} className="fixed inset-0 z-0 will-change-transform" aria-hidden="true">
-        <StarField count={isDesktop ? 15 : 8} />
+        <StarField count={isHighGpu ? 15 : 6} />
       </div>
     </>
   );

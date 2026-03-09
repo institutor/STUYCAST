@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ParallaxBackground } from "@/components/effects/ParallaxBackground";
 import { CustomCursor } from "@/components/effects/CustomCursor";
 import { MobileDisclaimer } from "@/components/ui/MobileDisclaimer";
+import { HardwareAccelDisclaimer } from "@/components/ui/HardwareAccelDisclaimer";
 import { PageTransitionProvider } from "@/components/effects/PageTransition";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
         <PageTransitionProvider>
           <CustomCursor />
           <MobileDisclaimer />
+          <HardwareAccelDisclaimer />
           <ParallaxBackground />
           <div className="relative z-10 flex flex-col min-h-screen">
             <KineticNavigation />
