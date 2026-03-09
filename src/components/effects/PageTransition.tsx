@@ -63,7 +63,7 @@ export function PageTransitionProvider({
       solid.style.opacity = "0";
       if (lowGpu) {
         glass.style.backdropFilter = "none";
-        (glass.style as Record<string, string>).webkitBackdropFilter = "none";
+        (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "none";
       }
 
       // Phase 1: Glass circle expands — translucent, refractive look over old page
@@ -90,7 +90,7 @@ export function PageTransitionProvider({
           setTimeout(() => {
             // Remove backdrop-filter during fade-out to reduce GPU load
             glass.style.backdropFilter = "none";
-            (glass.style as Record<string, string>).webkitBackdropFilter = "none";
+            (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "none";
             gsap.to(solid, {
               opacity: 0,
               duration: 0.5,
@@ -110,7 +110,7 @@ export function PageTransitionProvider({
                 // Restore backdrop-filter for next transition (only if high GPU)
                 if (!lowGpu) {
                   glass.style.backdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
-                  (glass.style as Record<string, string>).webkitBackdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
+                  (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
                 }
                 setIsTransitioning(false);
               },
