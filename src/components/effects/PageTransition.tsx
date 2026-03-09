@@ -61,7 +61,7 @@ export function PageTransitionProvider({
       // Phase 1: Glass circle expands — translucent, refractive look over old page
       gsap.to(progressRef.current, {
         value: 1,
-        duration: 1.0,
+        duration: 0.7,
         ease: "power2.inOut",
         onUpdate: () => {
           const p = progressRef.current.value;
@@ -80,6 +80,9 @@ export function PageTransitionProvider({
 
           // Phase 2: Hold, then fade out the solid overlay to reveal new page
           setTimeout(() => {
+            // Remove backdrop-filter during fade-out to reduce GPU load
+            glass.style.backdropFilter = "none";
+            (glass.style as Record<string, string>).webkitBackdropFilter = "none";
             gsap.to(solid, {
               opacity: 0,
               duration: 0.5,
@@ -99,7 +102,7 @@ export function PageTransitionProvider({
                 setIsTransitioning(false);
               },
             });
-          }, 700);
+          }, 400);
         },
       });
     },
@@ -120,8 +123,8 @@ export function PageTransitionProvider({
           className="absolute inset-0"
           style={{
             clipPath: "circle(0% at 50% 50%)",
-            backdropFilter: "blur(20px) saturate(1.4) brightness(0.6)",
-            WebkitBackdropFilter: "blur(20px) saturate(1.4) brightness(0.6)",
+            backdropFilter: "blur(8px) saturate(1.2) brightness(0.6)",
+            WebkitBackdropFilter: "blur(8px) saturate(1.2) brightness(0.6)",
             background:
               "radial-gradient(circle at 50% 50%, rgba(59,130,246,0.08) 0%, rgba(10,10,20,0.45) 40%, rgba(10,10,20,0.6) 100%)",
             boxShadow: "inset 0 0 120px 40px rgba(59,130,246,0.04)",

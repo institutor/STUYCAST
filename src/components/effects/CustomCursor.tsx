@@ -29,16 +29,27 @@ export function CustomCursor() {
     let hovering = false;
     let overText = false;
     let rafId: number;
+    let isAnimating = false;
+    let idleFrames = 0;
+
+    const startAnimating = () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      idleFrames = 0;
+      rafId = requestAnimationFrame(animate);
+    };
 
     const onMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      idleFrames = 0;
       if (!visible) {
         visible = true;
         dot.style.opacity = "1";
         ring.style.opacity = "1";
       }
       dot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
+      startAnimating();
     };
 
     const onMouseLeave = () => {
@@ -76,7 +87,6 @@ export function CustomCursor() {
         morph.style.opacity = "1";
         morph.style.width = "120px";
         morph.style.height = "120px";
-        // Hide the dot + ring when morph circle is active
         dot.style.opacity = "0";
         ring.style.opacity = "0";
       } else if (!isText && overText) {
@@ -98,10 +108,23 @@ export function CustomCursor() {
       const ringSize = hovering ? 48 : 36;
       ring.style.transform = `translate(${ringX - ringSize / 2}px, ${ringY - ringSize / 2}px)`;
 
-      // Morph circle lerp (slightly slower for a weightier feel)
+      // Morph circle lerp
       morphX += (mouseX - morphX) * 0.12;
       morphY += (mouseY - morphY) * 0.12;
       morph.style.transform = `translate(${morphX}px, ${morphY}px) translate(-50%, -50%)`;
+
+      // Stop the loop once ring/morph have caught up (idle for 30+ frames ≈ 0.5s)
+      const ringDist = Math.abs(mouseX - ringX) + Math.abs(mouseY - ringY);
+      const morphDist = Math.abs(mouseX - morphX) + Math.abs(mouseY - morphY);
+      if (ringDist < 0.5 && morphDist < 0.5) {
+        idleFrames++;
+        if (idleFrames > 30) {
+          isAnimating = false;
+          return;
+        }
+      } else {
+        idleFrames = 0;
+      }
 
       rafId = requestAnimationFrame(animate);
     };
@@ -114,7 +137,6 @@ export function CustomCursor() {
     document.addEventListener("mousemove", onMouseMove, { passive: true });
     document.addEventListener("mouseleave", onMouseLeave);
     document.addEventListener("mouseover", onMouseOver, { passive: true });
-    rafId = requestAnimationFrame(animate);
 
     return () => {
       document.removeEventListener("mousemove", onMouseMove);

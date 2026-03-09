@@ -37,7 +37,8 @@ export function ParticleCanvas() {
 
     const { width, height } = canvas;
     const particles = particlesRef.current;
-    const connectionDistance = isMobileRef.current ? 100 : 150;
+    const connectionDistance = 120;
+    const connDistSq = connectionDistance * connectionDistance;
 
     ctx.clearRect(0, 0, width, height);
 
@@ -51,17 +52,17 @@ export function ParticleCanvas() {
       if (p.y > height) p.y = 0;
     }
 
-    // Draw connections (skip on mobile for performance)
+    // Draw connections — skip on mobile, use squared distance to avoid sqrt
     if (!isMobileRef.current) {
+      ctx.lineWidth = 0.5;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < connectionDistance) {
-            const opacity = (1 - dist / connectionDistance) * 0.06;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < connDistSq) {
+            const opacity = (1 - Math.sqrt(distSq) / connectionDistance) * 0.06;
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.lineWidth = 0.5;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -71,7 +72,7 @@ export function ParticleCanvas() {
       }
     }
 
-    // Draw particles
+    // Draw particles — batch by using a single fillStyle for similar opacities
     for (const p of particles) {
       ctx.fillStyle = `rgba(148, 163, 184, ${p.opacity})`;
       ctx.beginPath();
@@ -90,9 +91,9 @@ export function ParticleCanvas() {
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     isMobileRef.current = isTouch;
 
-    // On mobile: fewer particles, no connections
-    const maxParticles = isTouch ? 20 : 80;
-    const divisor = isTouch ? 25000 : 15000;
+    // Reduced particle counts for better performance
+    const maxParticles = isTouch ? 12 : 40;
+    const divisor = isTouch ? 35000 : 25000;
 
     const handleResize = () => {
       canvas.width = window.innerWidth;

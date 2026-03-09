@@ -40,7 +40,7 @@ function ShutterLine({
       <motion.div key={animKey} className="flex flex-wrap justify-center items-center">
         {characters.map((char, i) => (
           <div key={i} className="relative overflow-hidden">
-            {/* Main character — blur in after slices clear */}
+            {/* Main character — blur in after sweep */}
             <motion.span
               initial={{ opacity: 0, filter: "blur(10px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}

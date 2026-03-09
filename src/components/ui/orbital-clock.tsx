@@ -9,12 +9,35 @@ export function OrbitalClock() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const hourRef = useRef<HTMLDivElement>(null)
+  const minuteRef = useRef<HTMLDivElement>(null)
+  const secondRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     setTime(new Date())
+    // Only update state once per second for the hour markers / date display
     const interval = setInterval(() => {
       setTime(new Date())
-    }, 50)
-    return () => clearInterval(interval)
+    }, 1000)
+
+    // Use rAF for smooth second hand only
+    let rafId: number
+    const tick = () => {
+      const now = new Date()
+      const s = now.getSeconds() + now.getMilliseconds() / 1000
+      const m = now.getMinutes() + s / 60
+      const h = (now.getHours() % 12) + m / 60
+      if (secondRef.current) secondRef.current.style.transform = `translateX(-50%) rotate(${s * 6}deg)`
+      if (minuteRef.current) minuteRef.current.style.transform = `translateX(-50%) rotate(${m * 6}deg)`
+      if (hourRef.current) hourRef.current.style.transform = `translateX(-50%) rotate(${h * 30}deg)`
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+
+    return () => {
+      clearInterval(interval)
+      cancelAnimationFrame(rafId)
+    }
   }, [])
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -115,7 +138,8 @@ export function OrbitalClock() {
 
           {/* Hour hand */}
           <div
-            className="absolute left-1/2 bottom-1/2 w-1 origin-bottom rounded-full bg-white/80 transition-all duration-200"
+            ref={hourRef}
+            className="absolute left-1/2 bottom-1/2 w-1 origin-bottom rounded-full bg-white/80"
             style={{
               height: "28%",
               transform: `translateX(-50%) rotate(${hourDeg}deg)`,
@@ -124,7 +148,8 @@ export function OrbitalClock() {
 
           {/* Minute hand */}
           <div
-            className="absolute left-1/2 bottom-1/2 w-0.5 origin-bottom rounded-full bg-white/50 transition-all duration-200"
+            ref={minuteRef}
+            className="absolute left-1/2 bottom-1/2 w-0.5 origin-bottom rounded-full bg-white/50"
             style={{
               height: "36%",
               transform: `translateX(-50%) rotate(${minuteDeg}deg)`,
@@ -133,6 +158,7 @@ export function OrbitalClock() {
 
           {/* Second hand */}
           <div
+            ref={secondRef}
             className="absolute left-1/2 bottom-1/2 origin-bottom rounded-full"
             style={{
               width: "1px",

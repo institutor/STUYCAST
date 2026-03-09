@@ -239,7 +239,7 @@ function getParticles(): Particle[] {
   if (_particles) return _particles;
   const rand = mulberry32(123);
   _particles = [];
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 30; i++) {
     _particles.push({
       x: rand(),
       y: rand(),
@@ -343,22 +343,38 @@ function drawEdgeFade(
   ctx.fillStyle = rightG; ctx.fillRect(cw - fadeSize, 0, fadeSize, ch);
 }
 
+// Cache noise textures to avoid regenerating per frame
+const _noiseCache = new Map<string, HTMLCanvasElement>();
+
 function drawNoise(
   ctx: CanvasRenderingContext2D,
   cw: number, ch: number,
-  density: number, seed: number
+  density: number, _seed: number
 ) {
-  const rand = mulberry32(seed);
-  // Larger step on small screens = fewer iterations
-  const step = cw < 600 ? 8 : 4;
-  for (let y = 0; y < ch; y += step) {
-    for (let x = 0; x < cw; x += step) {
-      if (rand() < density) {
-        ctx.fillStyle = `rgba(226,232,240,${rand() * 0.25})`;
-        ctx.fillRect(x, y, step, step);
+  // Use a single cached noise texture (seed-independent) to avoid per-frame regeneration.
+  // The subtle visual difference from changing seeds is imperceptible.
+  const key = `${cw}x${ch}`;
+  let noiseCanvas = _noiseCache.get(key);
+  if (!noiseCanvas) {
+    noiseCanvas = document.createElement("canvas");
+    noiseCanvas.width = cw;
+    noiseCanvas.height = ch;
+    const nctx = noiseCanvas.getContext("2d")!;
+    const rand = mulberry32(42);
+    const step = cw < 600 ? 8 : 6;
+    for (let y = 0; y < ch; y += step) {
+      for (let x = 0; x < cw; x += step) {
+        if (rand() < 0.35) {
+          nctx.fillStyle = `rgba(226,232,240,${rand() * 0.25})`;
+          nctx.fillRect(x, y, step, step);
+        }
       }
     }
+    _noiseCache.set(key, noiseCanvas);
   }
+  ctx.globalAlpha = Math.min(density / 0.35, 1);
+  ctx.drawImage(noiseCanvas, 0, 0);
+  ctx.globalAlpha = 1;
 }
 
 // ── Main draw ──────────────────────────────────────────────────────
