@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
-import { detectGpuTier } from "@/hooks/useGpuTier";
 
 // ── Context ──────────────────────────────────────────────────────────
 interface PageTransitionContextValue {
@@ -51,9 +50,6 @@ export function PageTransitionProvider({
         return;
       }
 
-      // On low-end GPUs, skip the glass layer entirely (no backdrop-filter)
-      const lowGpu = detectGpuTier() === "low";
-
       // Reset state
       overlay.style.visibility = "visible";
       overlay.style.pointerEvents = "all";
@@ -61,10 +57,6 @@ export function PageTransitionProvider({
       glass.style.clipPath = "circle(0% at 50% 50%)";
       solid.style.clipPath = "circle(0% at 50% 50%)";
       solid.style.opacity = "0";
-      if (lowGpu) {
-        glass.style.backdropFilter = "none";
-        (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "none";
-      }
 
       // Phase 1: Glass circle expands — translucent, refractive look over old page
       gsap.to(progressRef.current, {
@@ -107,11 +99,8 @@ export function PageTransitionProvider({
                 solid.style.opacity = "0";
                 glass.style.clipPath = "circle(0% at 50% 50%)";
                 solid.style.clipPath = "circle(0% at 50% 50%)";
-                // Restore backdrop-filter for next transition (only if high GPU)
-                if (!lowGpu) {
-                  glass.style.backdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
-                  (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
-                }
+                glass.style.backdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
+                (glass.style as unknown as Record<string, string>).webkitBackdropFilter = "blur(8px) saturate(1.2) brightness(0.6)";
                 setIsTransitioning(false);
               },
             });

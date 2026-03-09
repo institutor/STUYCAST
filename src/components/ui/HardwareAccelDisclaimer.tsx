@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { detectGpuTier } from "@/hooks/useGpuTier";
 
 const DISMISSED_KEY = "stuycast-hw-accel-dismissed";
 
@@ -9,12 +8,9 @@ export function HardwareAccelDisclaimer() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Only show on desktop (pointer devices) with low GPU tier
+    // Only show on desktop (pointer devices)
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (isTouch) return;
-
-    const tier = detectGpuTier();
-    if (tier !== "low") return;
 
     // Don't show again if already dismissed
     try {
