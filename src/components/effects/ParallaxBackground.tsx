@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { StarField } from "./StarField";
+import { useSimpleMode } from "@/hooks/useSimpleMode";
 
 // Lazy load particle canvas — only on desktop
 const AnimatedBackground = dynamic(
@@ -14,6 +15,7 @@ export function ParallaxBackground() {
   const auroraRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLDivElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const { simple } = useSimpleMode();
 
   useEffect(() => {
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
@@ -46,6 +48,14 @@ export function ParallaxBackground() {
       cancelAnimationFrame(rafId);
     };
   }, []);
+
+  if (simple) {
+    return (
+      <div className="fixed inset-0 z-0" aria-hidden="true">
+        <StarField count={4} />
+      </div>
+    );
+  }
 
   return (
     <>

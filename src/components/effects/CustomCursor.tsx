@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSimpleMode } from "@/hooks/useSimpleMode";
 
 const TEXT_SELECTORS = "h1,h2,h3,h4,h5,h6,p,span,a,button,li,label,strong,em,b,i,blockquote,td,th";
 const INTERACTIVE_SELECTORS = "a, button, input, textarea, select, [role='button']";
@@ -9,10 +10,21 @@ export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const morphRef = useRef<HTMLDivElement>(null);
+  const { simple } = useSimpleMode();
 
   useEffect(() => {
-    // Skip on touch devices
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    // Skip on touch devices or simple mode
+    if (window.matchMedia("(pointer: coarse)").matches || simple) {
+      // Reset all cursor elements when disabling
+      if (dotRef.current) dotRef.current.style.opacity = "0";
+      if (ringRef.current) ringRef.current.style.opacity = "0";
+      if (morphRef.current) {
+        morphRef.current.style.opacity = "0";
+        morphRef.current.style.width = "0px";
+        morphRef.current.style.height = "0px";
+      }
+      return;
+    }
 
     const dot = dotRef.current;
     const ring = ringRef.current;
@@ -144,7 +156,7 @@ export function CustomCursor() {
       document.removeEventListener("mouseover", onMouseOver);
       cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [simple]);
 
   return (
     <>

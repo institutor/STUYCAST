@@ -5,9 +5,11 @@ import { useRef } from "react";
 import { HeroShutterTitle } from "@/components/ui/hero-shutter-title";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { OrbitalClock } from "@/components/ui/orbital-clock";
+import { useSimpleMode } from "@/hooks/useSimpleMode";
 
 export function HeroLanding() {
   const ref = useRef<HTMLElement>(null);
+  const { simple } = useSimpleMode();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -26,22 +28,24 @@ export function HeroLanding() {
       {/* Animated line paths background */}
       <BackgroundPaths />
 
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            width: "60vw",
-            height: "60vw",
-            maxWidth: "800px",
-            maxHeight: "800px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(59,130,246,0.03) 0%, rgba(99,102,241,0.015) 40%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-      </div>
+      {/* Ambient glow — skip in simple mode */}
+      {!simple && (
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{
+              width: "60vw",
+              height: "60vw",
+              maxWidth: "800px",
+              maxHeight: "800px",
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(59,130,246,0.03) 0%, rgba(99,102,241,0.015) 40%, transparent 70%)",
+              filter: "blur(60px)",
+            }}
+          />
+        </div>
+      )}
 
       {/* Clock — pinned near top */}
       <motion.div

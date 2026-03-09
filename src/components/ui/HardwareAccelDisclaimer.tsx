@@ -40,7 +40,7 @@ export function HardwareAccelDisclaimer() {
         <span className="text-[var(--color-text-secondary)]">
           graphics acceleration
         </span>{" "}
-        in your browser&apos;s settings
+        in your browser&apos;s settings, or toggle simple mode in the top right
       </p>
       <button
         onClick={dismiss}

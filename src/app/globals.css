@@ -279,8 +279,10 @@ body {
   .custom-cursor-dot, .custom-cursor-ring { display: none !important; }
 }
 @media (pointer: fine) {
-  * { cursor: none !important; }
+  body:not(.simple-mode) * { cursor: none !important; }
 }
+.simple-mode .custom-cursor-dot,
+.simple-mode .custom-cursor-ring { display: none !important; }
 
 /* ===== Hover-only effects (disabled on touch devices) ===== */
 @media (hover: hover) {

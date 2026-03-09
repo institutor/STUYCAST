@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useSimpleMode } from "@/hooks/useSimpleMode";
 
 // Seeded random to avoid hydration mismatch
 function seededRandom(seed: number) {
@@ -60,17 +61,19 @@ const MemoizedFloatingPaths = memo(FloatingPaths);
 
 export function BackgroundPaths() {
   const [pathCount, setPathCount] = useState(0);
+  const { simple } = useSimpleMode();
 
   useEffect(() => {
+    if (simple) return;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (prefersReduced) return;
     // Skip entirely on touch/mobile, reduce from 16 to 8 per group on desktop
     if (isTouch) return;
     setPathCount(8);
-  }, []);
+  }, [simple]);
 
-  if (pathCount === 0) return null;
+  if (simple || pathCount === 0) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
