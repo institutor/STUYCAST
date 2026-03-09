@@ -678,13 +678,13 @@ export function ScrollDrivenSection() {
   });
 
   return (
-    <section ref={sectionRef} className="relative z-10" style={{ height: "300vh" }}>
+    <section ref={sectionRef} className="relative z-10 h-[200vh] sm:h-[300vh]">
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden bg-black">
         {/* Continuous marquee text — single line near the bottom */}
         <div className="pointer-events-none absolute inset-0 z-[5] flex select-none items-end overflow-hidden pb-[3%]" aria-hidden="true">
           <motion.div
             style={{ x: marqueeX, opacity: marqueeOpacity }}
-            className="whitespace-nowrap font-[var(--font-outfit)] text-[clamp(60px,12vw,160px)] font-black uppercase tracking-[-4px] text-[var(--color-accent-blue)]"
+            className="whitespace-nowrap font-[var(--font-outfit)] text-[clamp(36px,12vw,160px)] font-black uppercase tracking-[-2px] sm:tracking-[-4px] text-[var(--color-accent-blue)]"
           >
             CAPTURE &middot; STORIES &middot; CREATE &middot; BROADCAST &middot; EVERY ANGLE &middot; PRODUCE &middot; DIRECT &middot; FILM &middot; EDIT &middot; INSPIRE &middot; RECORD &middot; SHARE &middot; AMPLIFY &middot; VISION &middot; MOTION
           </motion.div>
@@ -704,7 +704,7 @@ export function ScrollDrivenSection() {
         </motion.div>
 
         {/* Left text column */}
-        <div className="absolute left-4 top-1/2 z-10 max-w-[85vw] -translate-y-1/2 sm:left-[8%] sm:max-w-[420px]">
+        <div className="absolute left-4 top-1/2 z-10 max-w-[75vw] -translate-y-1/2 sm:left-[8%] sm:max-w-[420px]">
           <motion.div style={{ opacity: labelOpacity }} className="mb-3 font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-accent-blue)] sm:mb-5 sm:text-[13px] sm:tracking-[6px]">
             002 / What We Are
           </motion.div>

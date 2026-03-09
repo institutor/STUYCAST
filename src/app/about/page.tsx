@@ -3,6 +3,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { RevealSection } from "@/components/ui/RevealSection";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { PageTitle } from "@/components/ui/PageTitle";
+import { MemoriesSlider } from "@/components/about/MemoriesSlider";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -25,10 +26,14 @@ export default function AboutPage() {
       <RevealSection>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 my-12">
           <AnimatedCounter end={55} suffix="+" label="Posts" />
-          <AnimatedCounter end={700} suffix="K+" label="Impressions" />
+          <AnimatedCounter end={1_000_000} label="Impressions" format="compact" />
           <AnimatedCounter end={100} suffix="+" label="Members" />
-          <AnimatedCounter end={3} label="Years Running" />
+          <AnimatedCounter end={4} label="Years Running" />
         </div>
+      </RevealSection>
+
+      <RevealSection>
+        <MemoriesSlider />
       </RevealSection>
 
       <div className="space-y-8">

@@ -125,7 +125,7 @@ export function CTASection() {
         >
           <Link
             href="/join"
-            className="group inline-flex items-center gap-3 bg-[var(--color-accent-blue)] px-8 py-4 font-[var(--font-outfit)] text-[12px] font-bold uppercase tracking-[3px] text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(59,130,246,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] sm:px-12 sm:py-5 sm:text-[14px] sm:tracking-[4px]"
+            className="group inline-flex items-center gap-3 bg-[var(--color-accent-blue)] px-8 py-3.5 min-h-[48px] font-[var(--font-outfit)] text-[12px] font-bold uppercase tracking-[3px] text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(59,130,246,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] sm:px-12 sm:py-5 sm:text-[14px] sm:tracking-[4px]"
           >
             Join StuyCast
             <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">

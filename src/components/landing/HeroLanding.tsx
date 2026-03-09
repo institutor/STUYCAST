@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { HeroShutterTitle } from "@/components/ui/hero-shutter-title";
 import { BackgroundPaths } from "@/components/ui/background-paths";
+import { OrbitalClock } from "@/components/ui/orbital-clock";
 
 export function HeroLanding() {
   const ref = useRef<HTMLElement>(null);
@@ -42,6 +43,16 @@ export function HeroLanding() {
         />
       </div>
 
+      {/* Clock — pinned near top */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute left-1/2 top-16 z-10 -translate-x-1/2 sm:top-16"
+      >
+        <OrbitalClock />
+      </motion.div>
+
       {/* Label */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -73,7 +84,7 @@ export function HeroLanding() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2"
+        className="absolute bottom-16 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 sm:bottom-10"
       >
         <span className="font-[var(--font-outfit)] text-[11px] uppercase tracking-[3px] text-[var(--color-text-muted)]">
           Scroll

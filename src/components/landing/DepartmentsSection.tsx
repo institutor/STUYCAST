@@ -58,7 +58,7 @@ function SiteLinkItem({
       <button
         onClick={() => !isTransitioning && transition(link.href)}
         disabled={isTransitioning}
-        className="dept-item-row group relative flex w-full items-center justify-between border-b border-white/[0.06] py-9 transition-all duration-[400ms] text-left"
+        className="dept-item-row group relative flex w-full items-center justify-between border-b border-white/[0.06] py-5 sm:py-9 transition-all duration-[400ms] text-left"
       >
         {/* Hover accent dot */}
         <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[var(--color-accent-blue)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -86,11 +86,11 @@ export function DepartmentsSection() {
   return (
     <section
       id="explore"
-      className="relative z-10 bg-[var(--color-bg-primary)] px-6 py-24 sm:px-12 lg:py-40"
+      className="relative z-10 bg-[var(--color-bg-primary)] px-4 py-16 sm:px-12 sm:py-24 lg:py-40"
     >
       <div className="mx-auto max-w-[1400px]">
         {/* Header */}
-        <div className="mb-20">
+        <div className="mb-12 sm:mb-20">
           <div className="mb-4 font-[var(--font-outfit)] text-[13px] uppercase tracking-[6px] text-[var(--color-accent-blue)]">
             003 / Explore
           </div>

@@ -28,8 +28,8 @@ export function GlassCard({
         "bg-white/5 backdrop-blur-md",
         "border border-white/10 rounded-2xl",
         "overflow-hidden",
-        hover &&
-          "transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)]",
+        "transition-all duration-300",
+        hover && "glass-card-hover",
         paddingMap[padding],
         className
       )}

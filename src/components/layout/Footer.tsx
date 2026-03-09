@@ -57,7 +57,7 @@ export function Footer() {
         {/* Top row — large STUYCAST wordmark + social */}
         <div className="mb-16 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
           <FooterReveal>
-            <div className="font-[var(--font-outfit)] text-[clamp(48px,8vw,96px)] font-black leading-none tracking-[-3px]">
+            <div className="font-[var(--font-outfit)] text-[clamp(36px,8vw,96px)] font-black leading-none tracking-[-2px] sm:tracking-[-3px]">
               STUY
               <span className="text-[var(--color-accent-blue)]">CAST</span>
             </div>
@@ -72,7 +72,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="group relative p-3 transition-colors"
+                  className="group relative p-3 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
                 >
@@ -132,7 +132,8 @@ export function Footer() {
         <FooterReveal delay={0.35}>
           <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/[0.04] pt-8 sm:flex-row">
             <p className="font-[var(--font-outfit)] text-[11px] font-light tracking-wide text-white/20">
-              Developed by <span className="text-white/40">Jiewen Huang</span>
+              Designed &amp; developed by{" "}
+              <span className="text-[var(--color-accent-blue)]/60">Jiewen Huang</span>
             </p>
             <p className="font-[var(--font-outfit)] text-[11px] tracking-[2px] text-white/15">
               EST. 2022 &middot; &copy; {new Date().getFullYear()} STUYCAST
