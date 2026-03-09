@@ -38,9 +38,9 @@ export function HardwareAccelDisclaimer() {
       <p className="font-[var(--font-outfit)] text-[11px] leading-relaxed tracking-[0.5px] text-[var(--color-text-muted)]">
         Experiencing lag? Try enabling{" "}
         <span className="text-[var(--color-text-secondary)]">
-          &ldquo;Use hardware acceleration when available&rdquo;
+          graphics acceleration
         </span>{" "}
-        in your browser&apos;s settings under System
+        in your browser&apos;s settings
       </p>
       <button
         onClick={dismiss}
