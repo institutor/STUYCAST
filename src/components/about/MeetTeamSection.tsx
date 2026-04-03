@@ -115,8 +115,8 @@ const executiveMembers: BoardMember[] = [
   },
   {
     name: "Ryan Radwan",
+    bio: "Ryan is the founder of StuyCast, having graduated as part of the Stuyvesant Class of 2025. He dedicated his sophomore, junior, and senior years to building the club from the ground up, and now focuses on continuing to support the future generations that will power the premier media production club at Stuyvesant for years to come as the Alumni Relations Coordinator, helping newer members learn from experienced alumni and creating opportunities for them to connect with the broader media industry.",
     role: "Alumni Relations Coordinator",
-    bio: "Class of 2025",
     photo: "/team/ryan-radwan.jpg",
   },
 ];
