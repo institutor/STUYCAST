@@ -4,6 +4,7 @@ import { RevealSection } from "@/components/ui/RevealSection";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { MemoriesSlider } from "@/components/about/MemoriesSlider";
+import { MeetTeamSection } from "@/components/about/MeetTeamSection";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -83,6 +84,8 @@ export default function AboutPage() {
             </div>
           </GlassCard>
         </RevealSection>
+
+        <MeetTeamSection />
 
         <RevealSection>
           <GlassCard padding="lg">
