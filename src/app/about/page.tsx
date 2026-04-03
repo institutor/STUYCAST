@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+it pullimport type { Metadata } from "next";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { RevealSection } from "@/components/ui/RevealSection";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
