@@ -17,6 +17,7 @@ type CrewInfo = {
   directors: {
     name: string;
     photo: string;
+    bio: string;
   }[];
   members: string[];
 };
@@ -51,36 +52,42 @@ const vicePresidents: BoardMember[] = [
   },
   {
     name: "Melanie Xie",
-    role: "Vice President",
+    role: "VP of Operations",
     bio: "Class of 2027",
     photo: "/team/melanie-xie.jpg",
   },
   {
     name: "Melody Qu",
-    role: "Vice President",
+    role: "VP of Internal Affairs",
     bio: "Class of 2027",
     photo: "/team/melody-qu.jpg",
   },
   {
     name: "Hannah Kim",
-    role: "Vice President",
+    role: "VP of Communications",
     bio: "Class of 2027",
     photo: "/team/hannah-kim.jpg",
   },
   {
-    name: "Ella Lee",
-    role: "Vice President",
-    bio: "Class of 2029",
-    photo: "/team/ella-lee.jpg",
+    name: "Jiewen Huang",
+    role: "VP of Web Development",
+    bio: "Class of 2026",
+    photo: "/team/jiewen-huang.jpg",
   },
 ];
 
 const executiveMembers: BoardMember[] = [
   {
-    name: "Anderson Oh",
-    role: "Treasurer",
-    bio: "StuyCast Leadership",
-    photo: "/team/anderson-oh.jpg",
+    name: "Ella Lee",
+    role: "Editor-in-Chief",
+    bio: "Class of 2029",
+    photo: "/team/ella-lee.jpg",
+  },
+  {
+    name: "Kevin Lin",
+    role: "Editor-in-Chief",
+    bio: "Class of 2027",
+    photo: "/team/kevin-lin.jpg",
   },
   {
     name: "Max Yang",
@@ -94,27 +101,45 @@ const executiveMembers: BoardMember[] = [
     bio: "StuyCast Leadership",
     photo: "/team/anders-zernike.jpg",
   },
+  {
+    name: "Anderson Oh",
+    role: "Treasurer",
+    bio: "StuyCast Leadership",
+    photo: "/team/anderson-oh.jpg",
+  },
+  {
+    name: "Everett Yu-Dawidowicz",
+    role: "Treasurer",
+    bio: "Class of 2027",
+    photo: "/team/everett-yu-dawidowicz.jpg",
+  },
+  {
+    name: "Ryan Radwan",
+    role: "Alumni Relations Coordinator",
+    bio: "Class of 2025",
+    photo: "/team/ryan-radwan.jpg",
+  },
 ];
 
 const crews: CrewInfo[] = [
   {
     crew: "Photography",
     directors: [
-      { name: "Catherine Chen", photo: "/team/catherine-chen.jpg" },
-      { name: "Timofey Volvovskiy", photo: "/team/timofey-volvovskiy.jpg" },
-      { name: "Anders Zernike", photo: "/team/anders-zernike.jpg" },
-      { name: "Caitleen Zheng", photo: "/team/caitleen-zheng.jpg" },
+      { name: "Catherine Chen", photo: "/team/catherine-chen.jpg", bio: "Photography Director" },
+      { name: "Timofey Volvovskiy", photo: "/team/timofey-volvovskiy.jpg", bio: "Photography Director" },
+      { name: "Anders Zernike", photo: "/team/anders-zernike.jpg", bio: "Photography Director" },
+      { name: "Caitleen Zheng", photo: "/team/caitleen-zheng.jpg", bio: "Photography Director" },
     ],
     members: ["Hugo Hu", "Anna Chen", "Epshita Arien", "Olivia Liu", "Megan Li", "Xinyi Chen", "Olivia Chen"],
   },
   {
     crew: "Video Production",
     directors: [
-      { name: "Jerry Qiu", photo: "/team/jerry-qiu.jpg" },
-      { name: "Aaron Lu", photo: "/team/aaron-lu.jpg" },
-      { name: "Mike Yin", photo: "/team/mike-yin.jpg" },
-      { name: "Clive Wu", photo: "/team/clive-wu.jpg" },
-      { name: "Emily Johnson", photo: "/team/emily-johnson.jpg" },
+      { name: "Jerry Qiu", photo: "/team/jerry-qiu.jpg", bio: "Video Production Director" },
+      { name: "Aaron Lu", photo: "/team/aaron-lu.jpg", bio: "Video Production Director" },
+      { name: "Mike Yin", photo: "/team/mike-yin.jpg", bio: "Video Production Director" },
+      { name: "Clive Wu", photo: "/team/clive-wu.jpg", bio: "Video Production Director" },
+      { name: "Emily Johnson", photo: "/team/emily-johnson.jpg", bio: "Video Production Director" },
     ],
     members: ["Connor Meyer", "Sofie Chang", "Felicity Yu", "Hilda Liang", "Jasmine Liang", "Milan Gittens"],
   },
@@ -127,10 +152,6 @@ function initialsFromName(name: string) {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
-}
-
-function directorBio(crewName: string) {
-  return `Helps lead ${crewName.toLowerCase()} projects, mentors members, and coordinates weekly production goals.`;
 }
 
 function Avatar({
@@ -209,7 +230,7 @@ function CrewCard({ crew, onOpen }: { crew: CrewInfo; onOpen: (member: BoardMemb
             const directorProfile: BoardMember = {
               name: director.name,
               role: `${crew.crew} Director`,
-              bio: directorBio(crew.crew),
+              bio: director.bio,
               photo: director.photo,
             };
 
