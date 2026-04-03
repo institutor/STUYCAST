@@ -26,10 +26,10 @@ export default function AboutPage() {
       {/* Animated stats counters */}
       <RevealSection>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 my-12">
-          <AnimatedCounter end={55} suffix="+" label="Posts" />
-          <AnimatedCounter end={1_000_000} label="Impressions" format="compact" />
+          <AnimatedCounter end={65} suffix="+" label="Posts" />
+          <AnimatedCounter end={2_000_000} label="Impressions" format="compact" />
           <AnimatedCounter end={100} suffix="+" label="Members" />
-          <AnimatedCounter end={4} label="Years Running" />
+          <AnimatedCounter end={4.5} label="Years Running" />
         </div>
       </RevealSection>
 

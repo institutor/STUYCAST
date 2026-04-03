@@ -30,16 +30,16 @@ const presidents: BoardMember[] = [
     photo: "/team/jerry-qiu.jpg",
   },
   {
-    name: "Vanna Lei",
-    role: "President",
-    bio: "Class of 2026",
-    photo: "/team/vanna-lei.jpg",
-  },
-  {
     name: "Lucy Chen",
     role: "President",
     bio: "Class of 2026",
     photo: "/team/lucy-chen.jpg",
+  },
+  {
+    name: "Vanna Lei",
+    role: "President",
+    bio: "Class of 2026",
+    photo: "/team/vanna-lei.jpg",
   },
 ];
 
@@ -49,18 +49,6 @@ const vicePresidents: BoardMember[] = [
     role: "Vice President",
     bio: "Class of 2027",
     photo: "/team/anchine-liu.jpg",
-  },
-  {
-    name: "Melanie Xie",
-    role: "VP of Operations",
-    bio: "Class of 2027",
-    photo: "/team/melanie-xie.jpg",
-  },
-  {
-    name: "Melody Qu",
-    role: "VP of Internal Affairs",
-    bio: "Class of 2027",
-    photo: "/team/melody-qu.jpg",
   },
   {
     name: "Hannah Kim",
@@ -74,14 +62,44 @@ const vicePresidents: BoardMember[] = [
     bio: "Class of 2026",
     photo: "/team/jiewen-huang.jpg",
   },
+  {
+    name: "Melanie Xie",
+    role: "VP of Operations",
+    bio: "Class of 2027",
+    photo: "/team/melanie-xie.jpg",
+  },
+  {
+    name: "Melody Qu",
+    role: "VP of Internal Affairs",
+    bio: "Class of 2027",
+    photo: "/team/melody-qu.jpg",
+  },
 ];
 
 const executiveMembers: BoardMember[] = [
+  {
+    name: "Anders Zernike",
+    role: "Editor-in-Chief",
+    bio: "StuyCast Leadership",
+    photo: "/team/anders-zernike.jpg",
+  },
+  {
+    name: "Anderson Oh",
+    role: "Treasurer",
+    bio: "StuyCast Leadership",
+    photo: "/team/anderson-oh.jpg",
+  },
   {
     name: "Ella Lee",
     role: "Editor-in-Chief",
     bio: "Class of 2029",
     photo: "/team/ella-lee.jpg",
+  },
+  {
+    name: "Everett Yu-Dawidowicz",
+    role: "Treasurer",
+    bio: "Class of 2027",
+    photo: "/team/everett-yu-dawidowicz.jpg",
   },
   {
     name: "Kevin Lin",
@@ -96,24 +114,6 @@ const executiveMembers: BoardMember[] = [
     photo: "/team/max-yang.jpg",
   },
   {
-    name: "Anders Zernike",
-    role: "Editor-in-Chief",
-    bio: "StuyCast Leadership",
-    photo: "/team/anders-zernike.jpg",
-  },
-  {
-    name: "Anderson Oh",
-    role: "Treasurer",
-    bio: "StuyCast Leadership",
-    photo: "/team/anderson-oh.jpg",
-  },
-  {
-    name: "Everett Yu-Dawidowicz",
-    role: "Treasurer",
-    bio: "Class of 2027",
-    photo: "/team/everett-yu-dawidowicz.jpg",
-  },
-  {
     name: "Ryan Radwan",
     role: "Alumni Relations Coordinator",
     bio: "Class of 2025",
@@ -125,23 +125,23 @@ const crews: CrewInfo[] = [
   {
     crew: "Photography",
     directors: [
-      { name: "Catherine Chen", photo: "/team/catherine-chen.jpg", bio: "Photography Director" },
-      { name: "Timofey Volvovskiy", photo: "/team/timofey-volvovskiy.jpg", bio: "Photography Director" },
       { name: "Anders Zernike", photo: "/team/anders-zernike.jpg", bio: "Photography Director" },
       { name: "Caitleen Zheng", photo: "/team/caitleen-zheng.jpg", bio: "Photography Director" },
+      { name: "Catherine Chen", photo: "/team/catherine-chen.jpg", bio: "Photography Director" },
+      { name: "Timofey Volvovskiy", photo: "/team/timofey-volvovskiy.jpg", bio: "Photography Director" },
     ],
-    members: ["Hugo Hu", "Anna Chen", "Epshita Arien", "Olivia Liu", "Megan Li", "Xinyi Chen", "Olivia Chen"],
+    members: ["Anna Chen", "Epshita Arien", "Hugo Hu", "Megan Li", "Olivia Chen", "Olivia Liu", "Xinyi Chen"],
   },
   {
     crew: "Video Production",
     directors: [
-      { name: "Jerry Qiu", photo: "/team/jerry-qiu.jpg", bio: "Video Production Director" },
       { name: "Aaron Lu", photo: "/team/aaron-lu.jpg", bio: "Video Production Director" },
-      { name: "Mike Yin", photo: "/team/mike-yin.jpg", bio: "Video Production Director" },
       { name: "Clive Wu", photo: "/team/clive-wu.jpg", bio: "Video Production Director" },
       { name: "Emily Johnson", photo: "/team/emily-johnson.jpg", bio: "Video Production Director" },
+      { name: "Jerry Qiu", photo: "/team/jerry-qiu.jpg", bio: "Video Production Director" },
+      { name: "Mike Yin", photo: "/team/mike-yin.jpg", bio: "Video Production Director" },
     ],
-    members: ["Connor Meyer", "Sofie Chang", "Felicity Yu", "Hilda Liang", "Jasmine Liang", "Milan Gittens"],
+    members: ["Connor Meyer", "Felicity Yu", "Hilda Liang", "Jasmine Liang", "Milan Gittens", "Sofie Chang"],
   },
 ];
 
