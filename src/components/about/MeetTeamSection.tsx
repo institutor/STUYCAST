@@ -26,7 +26,7 @@ const presidents: BoardMember[] = [
   {
     name: "Jerry Qiu",
     role: "President",
-    bio: "Class of 2026",
+    bio: "Jerry is a senior at Stuyvesant with a passion for aviation, music, and media. During Junior SING! 2025, he rediscovered a lifelong love for storytelling and has since dedicated himself to capturing moments that matter. He regularly creates content for StuyCast, other clubs, and the broader school community, from short-form videos to photo collages on Instagram. As a President, he is excited to keep filming and photographing at Stuyvesant while helping the next generation of StuyCast members grow in their creative journeys.",
     photo: "/team/jerry-qiu.jpg",
   },
   {
@@ -59,7 +59,7 @@ const vicePresidents: BoardMember[] = [
   {
     name: "Jiewen Huang",
     role: "VP of Web Development",
-    bio: "Class of 2026",
+    bio: "jiewen is cool",
     photo: "/team/jiewen-huang.jpg",
   },
   {
@@ -126,7 +126,7 @@ const crews: CrewInfo[] = [
     crew: "Photography",
     directors: [
       { name: "Anders Zernike", photo: "/team/anders-zernike.jpg", bio: "Photography Director" },
-      { name: "Caitleen Zheng", photo: "/team/caitleen-zheng.jpg", bio: "Photography Director" },
+      { name: "Caitleen Zheng", photo: "/team/caitleen-zheng.jpg", bio: "Raised in Iowa before moving to New York, Caitleen discovered her passion for photography last summer while photographing squirrels in a local park. Since then, she has grown rapidly as a photographer and is excited to keep developing her craft while helping newcomers find their footing." },
       { name: "Catherine Chen", photo: "/team/catherine-chen.jpg", bio: "Photography Director" },
       { name: "Timofey Volvovskiy", photo: "/team/timofey-volvovskiy.jpg", bio: "Photography Director" },
     ],
@@ -137,7 +137,7 @@ const crews: CrewInfo[] = [
     directors: [
       { name: "Aaron Lu", photo: "/team/aaron-lu.jpg", bio: "Video Production Director" },
       { name: "Clive Wu", photo: "/team/clive-wu.jpg", bio: "Video Production Director" },
-      { name: "Emily Johnson", photo: "/team/emily-johnson.jpg", bio: "Video Production Director" },
+      { name: "Emily Johnson", photo: "/team/emily-johnson.jpg", bio: "Emily developed her foundation in video production through a digital media course, where she gained hands-on experience with industry-standard software. She has since produced and edited multiple school video projects, and as a Video Production Director, she is excited to keep filming and creating new work. In her free time, she enjoys watching movies and writing." },
       { name: "Jerry Qiu", photo: "/team/jerry-qiu.jpg", bio: "Video Production Director" },
       { name: "Mike Yin", photo: "/team/mike-yin.jpg", bio: "Video Production Director" },
     ],
@@ -220,6 +220,10 @@ function MemberCard({
 }
 
 function CrewCard({ crew, onOpen }: { crew: CrewInfo; onOpen: (member: BoardMember) => void }) {
+  const midpoint = Math.ceil(crew.members.length / 2);
+  const leftMembers = crew.members.slice(0, midpoint);
+  const rightMembers = crew.members.slice(midpoint);
+
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
       <h4 className="text-white font-semibold text-base mb-2">{crew.crew}</h4>
@@ -229,7 +233,7 @@ function CrewCard({ crew, onOpen }: { crew: CrewInfo; onOpen: (member: BoardMemb
           {crew.directors.map((director) => {
             const directorProfile: BoardMember = {
               name: director.name,
-              role: `${crew.crew} Director`,
+              role: `Director of ${crew.crew}`,
               bio: director.bio,
               photo: director.photo,
             };
@@ -251,11 +255,18 @@ function CrewCard({ crew, onOpen }: { crew: CrewInfo; onOpen: (member: BoardMemb
       </div>
       <div>
         <p className="text-[11px] uppercase tracking-[1.6px] text-slate-400 mb-1">Members</p>
-        <ul className="space-y-1 text-sm text-slate-300">
-          {crew.members.map((member) => (
-            <li key={member}>{member}</li>
-          ))}
-        </ul>
+        <div className="grid grid-cols-2 gap-3">
+          <ul className="space-y-1 text-sm text-slate-300">
+            {leftMembers.map((member) => (
+              <li key={member}>{member}</li>
+            ))}
+          </ul>
+          <ul className="space-y-1 text-sm text-slate-300">
+            {rightMembers.map((member) => (
+              <li key={member}>{member}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
