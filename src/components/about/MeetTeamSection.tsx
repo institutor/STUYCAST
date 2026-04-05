@@ -38,6 +38,7 @@ const roster: PersonInfo[] = [
   { name: "Belal Hasan", roles: ["Director"], permission: 1, bio: "Web Development Director", photo: "/team/belal-hasan.jpg", crews: ["Web Development"], customTitle: "" },
   { name: "Caitleen Zheng", roles: ["Director"], permission: 1, bio: "Raised in Iowa before moving to New York, Caitleen discovered her passion for photography last summer while photographing squirrels in a local park. Since then, she has grown rapidly as a photographer and is excited to keep developing her craft while helping newcomers find their footing.", photo: "/team/caitleen-zheng.jpg", crews: ["Photography"], customTitle: "" },
   { name: "Catherine Chen", roles: ["Director"], permission: 1, bio: "Photography Director", photo: "/team/catherine-chen.jpg", crews: ["Photography"], customTitle: "" },
+  { name: "Christina Chen", roles: ["Board"], permission: 2, bio: "Lead Content Coordinator", photo: "/team/christina-chen.jpg", crews: ["Board"], customTitle: "Lead Content Coordinator" },
   { name: "Claire Man", roles: ["Member", "Member"], permission: 0, bio: "Treasury Member", photo: "/team/claire-man.jpg", crews: ["Treasury", "Visual Design"], customTitle: "" },
   { name: "Claire Zeng", roles: ["Director"], permission: 1, bio: "Community Engagement Director", photo: "/team/claire-zeng.jpg", crews: ["Community Engagement"], customTitle: "" },
   { name: "Chloe Tseng", roles: ["Member"], permission: 0, bio: "Visual Design Member", photo: "/team/chloe-tseng.jpg", crews: ["Visual Design"], customTitle: "" },
