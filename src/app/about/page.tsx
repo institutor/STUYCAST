@@ -5,6 +5,7 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { MemoriesSlider } from "@/components/about/MemoriesSlider";
 import { MeetTeamSection } from "@/components/about/MeetTeamSection";
+import TeamShowcase from "@/components/ui/team-showcase";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -83,6 +84,18 @@ export default function AboutPage() {
               </div>
             </div>
           </GlassCard>
+        </RevealSection>
+
+        <RevealSection>
+          <section className="relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-sm px-6 py-10 md:px-10 md:py-12 overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_60%)]" />
+            <div className="relative z-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-400 mb-2">Executive Board</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Meet the Presidents</h2>
+              <p className="text-sm text-slate-400 mb-6">The leaders driving StuyCast forward.</p>
+              <TeamShowcase />
+            </div>
+          </section>
         </RevealSection>
 
         <MeetTeamSection />
