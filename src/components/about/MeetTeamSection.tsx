@@ -245,74 +245,56 @@ function MemberCard({
   );
 }
 
-const CREW_ICONS: Record<string, string> = {
-  Photography: "\u{1F4F7}",
-  "Video Production": "\u{1F3AC}",
-  "Web Development": "\u{1F4BB}",
-  Journalism: "\u{270F}\u{FE0F}",
-  "Visual Design": "\u{1F3A8}",
-  "Community Engagement": "\u{1F91D}",
-  Treasury: "\u{1F4CA}",
-};
+function CrewCard({ crewName, onOpen }: { crewName: string; onOpen: (member: BoardMember) => void }) {
+  const directors = getCrewDirectors(crewName);
+  const members = getCrewMembers(crewName);
 
-function CrewTabs({ allCrews, onOpen }: { allCrews: string[]; onOpen: (member: BoardMember) => void }) {
-  const [activeCrew, setActiveCrew] = useState(allCrews[0]);
-  const directors = getCrewDirectors(activeCrew);
-  const members = getCrewMembers(activeCrew);
+  const midpoint = Math.ceil(members.length / 2);
+  const leftMembers = members.slice(0, midpoint);
+  const rightMembers = members.slice(midpoint);
 
   return (
-    <div>
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 pb-3 mb-5">
-        {allCrews.map((crew) => (
-          <button
-            key={crew}
-            type="button"
-            onClick={() => setActiveCrew(crew)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border whitespace-nowrap ${
-              activeCrew === crew
-                ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]"
-                : "bg-transparent text-slate-400 border-white/10 hover:text-white hover:border-white/25"
-            }`}
-          >
-            <span className="mr-1.5">{CREW_ICONS[crew] || "\u{2728}"}</span>
-            {crew}
-          </button>
-        ))}
-      </div>
+    <div className="bg-white/[0.03] border border-cyan-300/50 rounded-xl p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.24),0_0_16px_rgba(34,211,238,0.18),0_0_28px_rgba(59,130,246,0.12)] hover:shadow-[0_0_0_1px_rgba(34,211,238,0.34),0_0_20px_rgba(34,211,238,0.24),0_0_34px_rgba(59,130,246,0.18)] transition-shadow duration-300">
+      <h4 className="text-white font-semibold text-base mb-2">{crewName}</h4>
+      <div className="mb-3">
+        <p className="text-[11px] uppercase tracking-[1.6px] text-blue-300 mb-1">Directors</p>
+        <div className="grid grid-cols-1 gap-2">
+          {directors.map((director) => {
+            const directorProfile: BoardMember = {
+              name: director.name,
+              role: `Director of ${crewName}`,
+              bio: director.bio,
+              photo: director.photo,
+            };
 
-      {/* Content */}
-      <div key={activeCrew} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 md:p-6 animate-[fadeIn_0.2s_ease-out]">
-        <div className="mb-5">
-          <p className="text-[11px] uppercase tracking-[2px] text-blue-300 mb-3">Directors</p>
-          <div className="flex flex-wrap gap-2">
-            {directors.map((director) => {
-              const profile: BoardMember = { name: director.name, role: `Director of ${activeCrew}`, bio: director.bio, photo: director.photo };
-              return (
-                <button
-                  key={director.name}
-                  type="button"
-                  onClick={() => onOpen(profile)}
-                  className="flex items-center gap-2.5 rounded-xl border border-blue-400/20 bg-blue-500/[0.08] px-3.5 py-2.5 text-sm text-blue-100 hover:bg-blue-500/[0.15] hover:border-blue-400/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
-                  aria-label={`Open bio for ${director.name}`}
-                >
-                  <Avatar name={director.name} photo={director.photo} size="director" align="left" />
-                  <span className="leading-tight whitespace-nowrap">{director.name}</span>
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={director.name}
+                type="button"
+                onClick={() => onOpen(directorProfile)}
+                className="group w-full flex items-center gap-3 rounded-lg border border-blue-400/25 bg-blue-500/10 px-3 py-2 text-sm text-blue-100 text-left hover:bg-blue-500/20 hover:border-blue-300/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                aria-label={`Open bio for ${director.name}`}
+              >
+                <Avatar name={director.name} photo={director.photo} size="director" align="left" />
+                <span className="leading-tight whitespace-nowrap">{director.name}</span>
+              </button>
+            );
+          })}
         </div>
-        <div>
-          <p className="text-[11px] uppercase tracking-[2px] text-slate-500 mb-3">Members</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-1.5">
-            {members.map((m) => (
-              <p key={m.name} className="text-sm text-slate-300/80 truncate">{m.name}</p>
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-[1.6px] text-slate-400 mb-1">Members</p>
+        <div className="grid grid-cols-2 gap-3">
+          <ul className="space-y-1 text-sm text-slate-300">
+            {leftMembers.map((member) => (
+              <li key={member.name}>{member.name}</li>
             ))}
-          </div>
-          {members.length === 0 && (
-            <p className="text-sm text-slate-500 italic">No members in this crew yet.</p>
-          )}
+          </ul>
+          <ul className="space-y-1 text-sm text-slate-300">
+            {rightMembers.map((member) => (
+              <li key={member.name}>{member.name}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
@@ -381,9 +363,15 @@ export function MeetTeamSection() {
         <div className="mt-10 pt-8 border-t border-white/10">
           <h3 className="text-lg font-semibold text-white mb-2 text-center">Crews</h3>
           <p className="text-sm text-slate-400 mb-5 text-center">
-            Full roster by crew. Tap a director to read their bio.
+            Full roster by crew. Director cards are intentionally smaller for quick scanning.
           </p>
-          <CrewTabs allCrews={allCrews} onOpen={openMemberModal} />
+          <div className="columns-1 sm:columns-2 xl:columns-2 [column-gap:1rem]">
+            {allCrews.map((crew) => (
+              <div key={crew} className="mb-4 break-inside-avoid">
+                <CrewCard crewName={crew} onOpen={openMemberModal} />
+              </div>
+            ))}
+          </div>
         </div>
 
         {isMounted &&
